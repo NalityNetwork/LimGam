@@ -1,0 +1,11 @@
+name: LimGam
+author: RomnSD
+website: github.com/RomnSD
+version: 1.0.0
+api: [3.0.0]
+main: LimGam\LimGam
+load: POSTWORLD
+permissions:
+  allow.external.damage:
+    default: false
+    description: Allow external players to hit in game players.
