@@ -115,7 +115,7 @@ abstract class Arena
     /** @var int */
     protected const MAP_HAS_BEEN_ADDED = 12;
 
-    /** @var array */
+    /** @var array Default config template */
     public const CONFIG = [
         "Timeout"             => 0,
         "CountdownToStart"    => 0,
@@ -138,7 +138,7 @@ abstract class Arena
     public function __construct(string $arenaID, Game $game, array $config, string $teamClass = Team::class)
     {
         if (!is_a($teamClass, Team::class, true))
-            throw new InvalidArgumentException();
+            throw new InvalidArgumentException("The class must be or extend " . Team::class);
 
         self::CheckConfig($config);
 
@@ -198,7 +198,7 @@ abstract class Arena
         foreach ($config["Teams"] as $name => $team)
         {
             if (!is_array($team) || count($team) < 2)
-                throw new Exception("");
+                throw new Exception("Invalid team data in $name.");
 
             foreach ($val as $i => $v)
                 if (gettype($team[$i]) !== $v)
@@ -369,7 +369,7 @@ abstract class Arena
      * @param Team|null $team
      * @return bool
      */
-    public function AddSpectator(InGame $session, Team $team = null)
+    public function AddSpectator(InGame $session, Team $team = null): bool
     {
         if (!$team)
         {
@@ -673,6 +673,7 @@ abstract class Arena
 
     /**
      * @throws Exception
+     * @internal
      */
     protected function StatusResetting()
     {
@@ -686,6 +687,7 @@ abstract class Arena
      * @param int $event
      * @return bool
      * @throws Exception
+     * @internal
      */
     protected function BroadcastInternalEvent(int $event)
     {
@@ -744,6 +746,7 @@ abstract class Arena
 
     /**
      * @return mixed
+     * @internal
      */
     protected abstract function CheckWinner();
 
@@ -760,6 +763,7 @@ abstract class Arena
         if ($this->Map && $this->Map->GetLevelObject())
             $this->Map->SetLevelObject(null, true);
 
+        $this->Map = null;
         $this->Game->RemoveArena($this->GetID());
     }
 

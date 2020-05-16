@@ -158,4 +158,20 @@ class GameManager
 
 
 
+    public function __destruct()
+    {
+        foreach ($this->Games as $game)
+        {
+            foreach ($game->GetArenas() as $arena)
+                $arena->Close();
+        }
+
+        foreach (array_keys($this->Sessions) as $id)
+            unset($this->Sessions[$id]);
+
+        $this->MapManager = null;
+    }
+
+
+
 }

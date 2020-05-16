@@ -33,9 +33,11 @@ class InGame extends LimSession
     /** @var Team */
     protected $Team;
 
-
+    /** @var int Player is alive */
     public const STATUS_ALIVE      = 100;
+    /** @var int Player is spectating */
     public const STATUS_SPECTATING = 102;
+    /** @var int Player is not alive but neither is spectating, use this in special cases */
     public const STATUS_BUSY       = 104;
 
 
@@ -64,15 +66,17 @@ class InGame extends LimSession
         if ($party)
         {
 
-            if ($party->PlayTogether() && $this->GetTeam()->GetFreeSlots() < count($party->GetMembers()))
+            if ($party->PlayTogether() && $this->Team->GetFreeSlots() < count($party->GetMembers()))
                 throw new Exception("The team you have joined has not enough slots for your party.");
 
-            if (!$this->GetTeam()->AddReservation(...$party->GetMembers()))
+            $pMembers = $party->GetMembers();
+
+            if (!$this->Team->AddReservation(...$pMembers))
             {
                 if ($party->PlayTogether())
                     throw new Exception("There are not available teams in this match.");
 
-                foreach ($party->GetMembers() as $member)
+                foreach ($pMembers as $member)
                 {
                     $member = LimGam::GetInstance()->getServer()->getPlayerExact($member);
 
@@ -84,23 +88,11 @@ class InGame extends LimSession
             }
             else
             {
-                foreach ($party->GetMembers() as $member)
-                {
+                foreach ($pMembers as $member)
                     $arena->GetGame()->Link($member, $arena->GetID());
-                }
             }
         }
 
-    }
-
-
-
-    /**
-     * @return string
-     */
-    public function GetName(): string
-    {
-        return $this->Player->getName();
     }
 
 
@@ -220,9 +212,6 @@ class InGame extends LimSession
 
 
 
-    /**
-     *
-     */
     public function Close(): void
     {
         $this->Team->RemoveMember($this->Player->getName());

@@ -11,6 +11,7 @@ use LimGam\LimGam;
 use LimGam\Game\Event\IGamEvent;
 use LimGam\Task\Game\ExpiredLinksUpdater;
 use LimGam\Task\Game\GameUpdater;
+use Throwable;
 
 
 /**
@@ -118,9 +119,9 @@ class Game implements Countable
 
 
     /**
-     * @return ExpiredLinksUpdater
+     * @return ExpiredLinksUpdater|null
      */
-    public function GetLinksUpdater(): ExpiredLinksUpdater
+    public function GetLinksUpdater(): ?ExpiredLinksUpdater
     {
         return $this->LinksUpdater;
     }
@@ -138,8 +139,11 @@ class Game implements Countable
 
         $this->Arenas[$arena->GetID()] = $arena;
 
-        if ((($count = count($this)) % 5) === 0)
-            $this->Tasks[($count / 5)] = (new GameUpdater($this, ($count / 5)))->Start();
+        $total = $this->count();
+        $div   = ($total / 5);
+
+        if (($total % 5) === 0)
+            $this->Tasks[$div] = (new GameUpdater($this, $div))->Start();
     }
 
 
@@ -152,9 +156,19 @@ class Game implements Countable
         if (!isset($this->Arenas[$arenaID]))
             return;
 
-        $this->Arenas[$arenaID]->Close();
+        try
+        {
+            $this->Arenas[$arenaID]->Close();
+        }
+        catch (Throwable $e)
+        {
+            LimGam::GetInstance()->getLogger()->logException($e);
+        }
+        finally
+        {
+            unset($this->Arenas[$arenaID]);
+        }
 
-        unset($this->Arenas[$arenaID]);
     }
 
 
@@ -238,7 +252,7 @@ class Game implements Countable
     /**
      * @param IGamEvent $event
      */
-    public function AddEvent(IGamEvent $event)
+    public function AddEvent(IGamEvent $event): void
     {
         if ($event->GetGame() !== $this->Name)
             throw new InvalidArgumentException("Trying to add an event with incompatible game type is not acceptable.");

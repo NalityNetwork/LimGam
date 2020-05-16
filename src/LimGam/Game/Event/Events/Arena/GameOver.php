@@ -8,6 +8,10 @@ use LimGam\Game\Arena;
 use pocketmine\event\Event;
 
 
+/**
+ * @author RomnSD
+ * @package LimGam\Game\Event\Events\Arena
+ */
 class GameOver extends Event
 {
 

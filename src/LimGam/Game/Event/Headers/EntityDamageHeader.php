@@ -13,7 +13,7 @@ use pocketmine\Player;
 
 /**
  * @author  RomnSD
- * @package LimGam\Game\Event\Actions
+ * @package LimGam\Game\Event\Headers
  */
 class EntityDamageHeader extends EventHeader
 {

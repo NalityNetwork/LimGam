@@ -15,7 +15,7 @@ use pocketmine\plugin\EventExecutor;
 
 /**
  * @author  RomnSD
- * @package LimGam\Game
+ * @package LimGam\Game\Event
  */
 class IGamEvent implements EventExecutor, IGamEventListener
 {

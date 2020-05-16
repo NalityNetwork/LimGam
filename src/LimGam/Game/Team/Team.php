@@ -138,13 +138,7 @@ class Team implements Countable
      */
     public function AddMember(InGame $session): bool
     {
-        if (isset($this->Members[$session->GetName()]))
-            return false;
-
-        if ($session->GetTeam())
-            return false;
-
-        if ($session->IsSpectating() && $this->CountInGame())
+        if (isset($this->Members[$session->GetName()]) || $session->GetTeam() || ($session->IsSpectating() && $this->CountInGame()))
             return false;
 
         if (!$this->IsExternal)
@@ -155,8 +149,14 @@ class Team implements Countable
             unset($this->Reservations[$session->GetName()]);
         }
 
-        $this->Members[$session->GetName()] = $session;
-        $this->Members[$session->GetName()]->SetTeam($this);
+        $sname = $session->GetName();
+
+        /** @var Team $team */
+        foreach ($session->GetArena()->GetTeams() as $team)
+            $team->RemoveReservation($sname);
+
+        $this->Members[$sname] = $session;
+        $this->Members[$sname]->SetTeam($this);
 
         return true;
     }
@@ -170,8 +170,7 @@ class Team implements Countable
      */
     public function RemoveMember(string $player, string $reason = "unknown"): void
     {
-        if ($this->IsMember($player))
-            unset($this->Members[$player]);
+        unset($this->Members[$player]);
     }
 
 

@@ -45,6 +45,17 @@ class LimGam extends PluginBase
 
 
     /**
+     * @param GameManager $gameManager
+     */
+    public function SetGameManager(GameManager $gameManager): void
+    {
+        static::$GameManager = $gameManager;
+        $this->getLogger()->debug("Default GameManager has been replaced.");
+    }
+
+
+
+    /**
      * Return GameManager instance
      * @return GameManager
      */
