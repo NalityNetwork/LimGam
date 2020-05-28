@@ -64,7 +64,7 @@ class MapManager
      */
     public function GetMap(string $game, string $name): ?Map
     {
-        if (isset(static::$Maps[$game]) && isset(static::$Maps[$game][$name]))
+        if (isset(static::$Maps[$game], static::$Maps[$game][$name]))
             return clone static::$Maps[$game][$name];
 
         return null;
@@ -101,8 +101,8 @@ class MapManager
     {
         $maps = [];
 
-        foreach ($this->GetMaps($game) as $map)
-            if (count($map->GetSpawns()) === $spawnsCount && $map->AllowTeams() === $teamMap)
+        foreach ($this->GetMaps($game, $teamMap) as $map)
+            if (count($map->GetSpawns()) === $spawnsCount)
                 $maps[] = $map;
 
         return $maps;

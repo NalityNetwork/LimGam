@@ -28,7 +28,7 @@ class QuitWhenDie extends EventAction
     {
         /** @var PlayerDeathEvent $event */
         if (!($result instanceof InGame))
-            $result = LimGam::GetGameManager()->GetSession($event->GetName());
+            $result = LimGam::GetGameManager()->GetSession($event->getPlayer()->getName());
 
         if ($result)
             if ($result->GetArena()->GetStatus(Arena::STATUS_RUNNING))

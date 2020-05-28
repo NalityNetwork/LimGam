@@ -8,13 +8,13 @@ use pocketmine\event\Listener;
 
 /**
  * @author  RomnSD
- * @package LimGam\Event
+ * @package LimGam\Game\Event
  */
 interface IGamEventListener extends Listener
 {
 
 
-
     //...
+
 
 }

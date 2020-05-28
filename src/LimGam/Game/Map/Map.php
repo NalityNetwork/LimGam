@@ -59,7 +59,7 @@ class Map implements JsonSerializable
     /** @var int */
     protected static $MapCounter = 0;
 
-    /** @var array */
+    /** @var array Default config template */
     public const CONFIG = [
         "File"       => "",
         "Game"       => "",
@@ -156,7 +156,7 @@ class Map implements JsonSerializable
 
 
     /**
-     * @return Vector3[]
+     * @return Position[]
      */
     public function GetSpawns(): array
     {
@@ -236,7 +236,7 @@ class Map implements JsonSerializable
 
         $this->LevelObject = $level;
 
-        foreach ($this->Spawns as $spawn)
+        foreach ($this->Spawns as &$spawn)
             $spawn->setLevel($this->LevelObject);
     }
 
@@ -280,13 +280,14 @@ class Map implements JsonSerializable
         $spawns = [];
 
         foreach ($this->Spawns as $spawn)
-            $spawns[] = [$spawn->getX(), $spawn->getY(), $spawn->getZ()];
+            $spawns[] = [$spawn->x, $spawn->y, $spawn->z];
 
         return [
-            "File"     => $this->File,
-            "Game"     => $this->Game,
-            "Builders" => $this->Builders,
-            "Spawns"   => $spawns
+            "File"       => $this->File,
+            "Game"       => $this->Game,
+            "AllowTeams" => $this->AllowTeams,
+            "Builders"   => $this->Builders,
+            "Spawns"     => $spawns
         ];
     }
 

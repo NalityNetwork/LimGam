@@ -38,18 +38,12 @@ class NoTeamDamage extends EventAction
      */
     public function Process(Event $event, $result)
     {
-        if ($event->isCancelled() || !($result instanceof InGame))
-            return;
-
-        if (!($event instanceof EntityDamageByEntityEvent) && !($event instanceof EntityDamageByChildEntityEvent))
+        if ($event->isCancelled() || !($result instanceof InGame) || !($event instanceof EntityDamageByEntityEvent) && !($event instanceof EntityDamageByChildEntityEvent))
             return;
 
         $attacker = ($event instanceof EntityDamageByEntityEvent) ? $event->getDamager() : $event->getChild()->getOwningEntity();
 
-        if (!($attacker instanceof Player))
-            return;
-
-        if ($result->GetTeam()->IsMember($attacker->getName()))
+        if (($attacker instanceof Player) && $result->GetTeam()->IsMember($attacker->getName()))
             $event->setCancelled();
     }
 

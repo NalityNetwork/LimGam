@@ -24,7 +24,7 @@ class NoDamage extends EventAction
     /**
      * @param int $priority
      */
-    public function __construct(int $priority = IGamEvent::PRIORITY_LOW)
+    public function __construct(int $priority = IGamEvent::PRIORITY_HIGH)
     {
         parent::__construct($priority);
     }
@@ -37,11 +37,10 @@ class NoDamage extends EventAction
     public function Process(Event $event, $result)
     {
         /** @var EntityDamageEvent $event */
-        if (!($player = $event->getEntity()) instanceof Player)
+        if (!($event->getEntity()) instanceof Player)
             return;
 
-        /** @var Player $player */
-        if (LimGam::GetGameManager()->GetSession($player->getName()))
+        if (LimGam::GetGameManager()->GetSession($event->getEntity()->getName()))
             $event->setCancelled();
     }
 

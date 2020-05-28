@@ -51,10 +51,7 @@ class GameManager
      */
     public function AddSession(Player $player, Arena $arena, Party $party = null, int $status = InGame::STATUS_ALIVE): bool
     {
-        if (isset($this->Sessions[$player->getName()]))
-            return false;
-
-        if (!$arena->IsJoinable() && $status !== InGame::STATUS_SPECTATING)
+        if (isset($this->Sessions[$player->getName()]) || (!$arena->IsJoinable() && $status !== InGame::STATUS_SPECTATING))
             return false;
 
         try
@@ -121,11 +118,8 @@ class GameManager
 
         $this->Games[$game] = new Game($game);
 
-        if ($arenas !== [])
-        {
-            foreach ($arenas as $arena)
-                $this->Games[$game]->AddArena($arena);
-        }
+        foreach ($arenas as $arena)
+            $this->Games[$game]->AddArena($arena);
     }
 
 

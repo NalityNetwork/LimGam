@@ -220,6 +220,8 @@ class Game implements Countable
 
             LimGam::GetInstance()->getScheduler()->cancelTask($taskID);
             unset($this->Tasks[$taskID]);
+
+            break;
         }
     }
 
@@ -244,6 +246,8 @@ class Game implements Countable
 
             LimGam::GetInstance()->getScheduler()->cancelTask($task->getTaskId());
             unset($this->Tasks[$i]);
+
+            break;
         }
     }
 
