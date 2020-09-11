@@ -7,11 +7,12 @@ namespace LimGam\Game;
 use Countable;
 use Exception;
 use InvalidArgumentException;
+use Performance\Performance;
+use Throwable;
 use LimGam\LimGam;
 use LimGam\Game\Event\IGamEvent;
 use LimGam\Task\Game\ExpiredLinksUpdater;
 use LimGam\Task\Game\GameUpdater;
-use Throwable;
 
 
 /**
@@ -51,7 +52,7 @@ class Game implements Countable
         $this->Name         = $name;
         $this->Arenas       = [];
         $this->Links        = [];
-        $this->Tasks        = [0 => (new GameUpdater($this, 0))->Start()];
+        $this->Tasks        = [(new GameUpdater($this, 0))->Start()];
         $this->LinksUpdater = (new ExpiredLinksUpdater($this))->Start();
     }
 
@@ -93,7 +94,7 @@ class Game implements Countable
      */
     public function Link(string $player, string $arenaID): void
     {
-        $this->Links[$player] = [$arenaID, time()];
+        $this->Links[$player] = [$arenaID, 30];
     }
 
 
@@ -140,9 +141,9 @@ class Game implements Countable
         $this->Arenas[$arena->GetID()] = $arena;
 
         $total = $this->count();
-        $div   = ($total / 5);
+        $div   = (int) ($total / 5);
 
-        if (($total % 5) === 0)
+        if ((int) ($total % 5) === 0 && $total > 0)
             $this->Tasks[$div] = (new GameUpdater($this, $div))->Start();
     }
 
@@ -221,7 +222,7 @@ class Game implements Countable
             LimGam::GetInstance()->getScheduler()->cancelTask($taskID);
             unset($this->Tasks[$taskID]);
 
-            break;
+            return;
         }
     }
 
@@ -247,7 +248,7 @@ class Game implements Countable
             LimGam::GetInstance()->getScheduler()->cancelTask($task->getTaskId());
             unset($this->Tasks[$i]);
 
-            break;
+            return;
         }
     }
 
@@ -278,12 +279,27 @@ class Game implements Countable
 
 
     /**
+     * @param string $event
+     */
+    public function RemoveEvent(string $event): void
+    {
+        if (isset($this->Events[$event]))
+            $this->Events[$event]->Unregister();
+
+        unset($this->Events[$event]);
+    }
+
+
+
+    /**
      * @return array|IGamEvent[]
      */
     public function GetEvents(): array
     {
         return $this->Events;
     }
+
+
 
 
 

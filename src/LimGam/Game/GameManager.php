@@ -5,8 +5,6 @@ namespace LimGam\Game;
 
 
 use Exception;
-use LimGam\Game\Event\Events\Player\PlayerJoinArena;
-use LimGam\Game\Event\Events\Player\PlayerQuitArena;
 use LimGam\Game\Map\MapManager;
 use LimGam\Game\Session\InGame;
 use pocketmine\Player;
@@ -30,41 +28,44 @@ class GameManager
     /** @var MapManager */
     protected $MapManager;
 
+    /** @var string */
+    protected $SessionClass;
+
 
 
     /** Constructor */
     public function __construct()
     {
-        $this->Games      = [];
-        $this->Sessions   = [];
-        $this->MapManager = new MapManager();
+        $this->Games        = [];
+        $this->Sessions     = [];
+        $this->MapManager   = new MapManager();
+        $this->SessionClass = InGame::class;
     }
 
 
 
     /**
-     * @param Player     $player
-     * @param Arena      $arena
-     * @param Party|null $party
-     * @param int        $status
-     * @return bool
+     * @param string $class
      */
-    public function AddSession(Player $player, Arena $arena, Party $party = null, int $status = InGame::STATUS_ALIVE): bool
+    public function SetSessionClass(string $class): void
     {
-        if (isset($this->Sessions[$player->getName()]) || (!$arena->IsJoinable() && $status !== InGame::STATUS_SPECTATING))
-            return false;
+        if (!is_a($class, InGame::class, true) || count($this->Sessions))
+            return;
 
-        try
-        {
-            $this->Sessions[$player->getName()] = new InGame($player, $arena, $party, $status);
-            (new PlayerJoinArena($this->Sessions[$player->getName()]))->call();
-        }
-        catch (Exception $e)
-        {
-            return false;
-        }
+        $this->SessionClass = $class;
+    }
 
-        return true;
+
+
+    /**
+     * @param Player $player
+     */
+    public function AddSession(Player $player): void
+    {
+        if (isset($this->Sessions[$player->getName()]))
+            return;
+
+        $this->Sessions[$player->getName()] = new $this->SessionClass($player);
     }
 
 
@@ -74,24 +75,30 @@ class GameManager
      */
     public function RemoveSession(string $name): void
     {
-        if (!isset($this->Sessions[$name]))
-            return;
-
-        $this->Sessions[$name]->Close();
-        (new PlayerQuitArena($this->Sessions[$name]))->call();
-
-        unset($this->Sessions[$name]);
+        if (isset($this->Sessions[$name]))
+        {
+            $this->Sessions[$name]->Close();
+            unset($this->Sessions[$name]);
+        }
     }
 
 
 
     /**
-     * @param string $name
+     * @param string|Player $player
      * @return InGame|null
      */
-    public function GetSession(string $name): ?InGame
+    public function GetSession($player): ?InGame
     {
-        return ($this->Sessions[$name] ?? null);
+        if ($player instanceof Player)
+        {
+            if (!isset($this->Sessions[$player->getName()]))
+                $this->Sessions[$player->getName()] = new InGame($player);
+
+            $player = $player->getName();
+        }
+
+        return ($this->Sessions[(string) $player] ?? null);
     }
 
 
@@ -161,7 +168,7 @@ class GameManager
         }
 
         foreach (array_keys($this->Sessions) as $id)
-            unset($this->Sessions[$id]);
+            unset($this->Sessions[$id]); //sessions = []
 
         $this->MapManager = null;
     }

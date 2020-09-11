@@ -6,12 +6,12 @@ namespace LimGam\Game;
 
 use Exception;
 use InvalidArgumentException;
+use Throwable;
 use LimGam\Game\Event\Events\Arena\GameOver;
 use LimGam\Game\Map\Map;
 use LimGam\Game\Session\InGame;
 use LimGam\Game\Team\Team;
 use LimGam\LimGam;
-use Throwable;
 
 
 /**
@@ -55,6 +55,9 @@ abstract class Arena
 
     /** @var int */
     protected $CountdownToReset;
+
+    /** @var bool */
+    protected $AutoMapReset;
 
     /** @var int */
     protected $PlayersCountToStart;
@@ -121,6 +124,7 @@ abstract class Arena
         "CountdownToStart"    => 0,
         "CountdownArenaFull"  => 0,
         "CountdownToReset"    => 0,
+        //"AutoMapReset"        => false, //todo: implement
         "PlayersCountToStart" => 0,
         "TeamSize"            => 0,
         "Teams"               => []
@@ -137,6 +141,7 @@ abstract class Arena
      */
     public function __construct(string $arenaID, Game $game, array $config, string $teamClass = Team::class)
     {
+
         if (!is_a($teamClass, Team::class, true))
             throw new InvalidArgumentException("The class must be or extend " . Team::class);
 
@@ -153,6 +158,7 @@ abstract class Arena
         $this->CountdownToStart    = $config["CountdownToStart"];
         $this->CountdownArenaFull  = $config["CountdownArenaFull"];
         $this->CountdownToReset    = $config["CountdownToReset"];
+        $this->AutoMapReset        = true;//$config["AutoMapReset"];
         $this->PlayersCountToStart = $config["PlayersCountToStart"];
         $this->TeamSize            = $config["TeamSize"];
         $this->SoloMode            = ($this->TeamSize === 1);
@@ -163,11 +169,12 @@ abstract class Arena
             try
             {
                 $this->TeamsLimit++;
-                $this->AddTeam(new $this->TeamClass($name, $team[0], $team[1], $this->TeamSize));
+                $this->AddTeam(new $this->TeamClass((string) $name, $team[0], $team[1], $this->TeamSize, $this->ArenaID));
             }
-            catch (Exception $e)
+            catch (Throwable $e)
             {
-                break;
+                LimGam::GetInstance()->getLogger()->debug($e->getMessage());
+                continue;
             }
         }
 
@@ -193,7 +200,7 @@ abstract class Arena
         if ($config["Teams"] === [])
             throw new Exception("Team list cannot be empty...");
 
-        $val = [0 => "string", 1 => "boolean"];
+        $val = ["string", "boolean"];
 
         foreach ($config["Teams"] as $name => $team)
         {
@@ -201,8 +208,10 @@ abstract class Arena
                 throw new Exception("Invalid team data in $name.");
 
             foreach ($val as $i => $v)
+            {
                 if (gettype($team[$i]) !== $v)
                     throw new Exception();
+            }
         }
     }
 
@@ -220,6 +229,9 @@ abstract class Arena
 
         foreach ($this->Teams as $team)
             $team->CleanUp();
+
+        if ($this->AutoMapReset)
+            $this->Map = null;
 
         $this->Status    = static::STATUS_WAITING;
         $this->Joinable  = true;
@@ -314,17 +326,20 @@ abstract class Arena
      * @param string $player
      * @return Team|null
      */
-    public function FindFreeTeam(string $player = "", array $mates = []): ?Team
+    public function FindFreeTeam(string $player = "", bool $external = false, array $mates = []): ?Team
     {
         /** @var Team $team */
         foreach ($this->Teams as $team)
         {
+            if ($team->IsExternal() !== $external)
+                continue;
+
             if ($mates === [])
             {
                 if ($player && $team->HasReservation($player))
                     return $team;
 
-                if (!$team->IsFull())
+                if ($team->GetFreeSlots())
                     return $team;
             }
             else
@@ -341,30 +356,6 @@ abstract class Arena
 
 
     /**
-     * @param string $player
-     * @return Team|null
-     */
-    public function FindFreeExternalTeam(string $player = ""): ?Team
-    {
-        /** @var Team $team */
-        foreach ($this->Teams as $team)
-        {
-            if ($team->IsExternal())
-            {
-                if ($player && $team->HasReservation($player))
-                    return $team;
-
-                if ($team->GetFreeSlots() > 0)
-                    return $team;
-            }
-        }
-
-        return null;
-    }
-
-
-
-    /**
      * @param InGame    $session
      * @param Team|null $team
      * @return bool
@@ -373,7 +364,7 @@ abstract class Arena
     {
         if (!$team)
         {
-            $team = $this->FindFreeExternalTeam($session->getName());
+            $team = $this->FindFreeTeam($session->getName(), true);
 
             if ($team)
                 $team->AddReservation($session->getName());
@@ -404,6 +395,9 @@ abstract class Arena
      */
     public function GetFreeSlots(): int
     {
+        if (!$this->Joinable)
+            return 0;
+        
         $slots = 0;
 
         foreach ($this->Teams as $team)
@@ -530,9 +524,10 @@ abstract class Arena
 
 
     /**
+     * @param int $currentTick
      * @throws Exception
      */
-    public function Update()
+    public function Update(int $currentTick = 0)
     {
         if ($this->Closed)
             return;
@@ -575,8 +570,7 @@ abstract class Arena
         $count = 0;
 
         foreach ($this->Teams as $team)
-            if (!$team->isEmpty())
-                $count += $team->CountInGame();
+            $count += $team->CountInGame();
 
         return $count;
     }
@@ -725,7 +719,6 @@ abstract class Arena
 
 
     /**
-     * @throws Exception
      * @internal
      */
     protected function End()
@@ -737,14 +730,15 @@ abstract class Arena
 
     /**
      * @param InGame $session
-     * @param int    $status
      * @return bool
      */
-    public abstract function ProcessSession(InGame $session, int $status): bool;
+    public abstract function ProcessSession(InGame $session): bool;
 
 
 
     /**
+     * Logical function to set and get the winner team of the match.
+     * Use this function with "$this->Winner" variable.
      * @return mixed
      * @internal
      */
@@ -752,6 +746,9 @@ abstract class Arena
 
 
 
+    /**
+     * Closes the arena
+     */
     public function Close(): void
     {
         if ($this->Closed)

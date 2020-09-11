@@ -27,6 +27,8 @@ class SimpleMcRegion extends McRegion
     /** @var resource */
     protected $ZipResource;
 
+    protected $ZipEntries = [];
+
 
 
     /**
@@ -48,6 +50,23 @@ class SimpleMcRegion extends McRegion
 
         $this->path        = $path;
         $this->ZipResource = zip_open($path);
+
+        while(is_resource($entry = zip_read($this->ZipResource))) {
+
+            if (preg_match('#region/#', ($name = zip_entry_name($entry))) !== 1) {
+                if (basename($name) !== 'level.dat') {
+                    zip_entry_close($entry);
+                    continue;
+                }
+                $this->ZipEntries['level'] = $entry;
+                continue;
+            }
+            [$r, $x, $z, $ext] = explode('.', substr($name, 8)); //TODO: mejorar
+            $this->ZipEntries[$x . '.' . $z] = $entry;
+        }
+
+        if (!isset($this->ZipEntries['level']))
+            throw new Exception("level.dat was not found in " . $this->path);
 
         $this->loadLevelData();
         $this->fixLevelData();
@@ -84,22 +103,9 @@ class SimpleMcRegion extends McRegion
      */
     protected function loadLevelData(): void
     {
-        $valid = false;
-
-        while (is_resource($entry = zip_read($this->ZipResource)))
-        {
-            if (basename(zip_entry_name($entry)) === "level.dat")
-            {
-                $valid = true;
-                break;
-            }
-        }
-
-        if (!$valid)
-            throw new Exception("level.dat was not found in " . $this->path);
-
-        $nbt  = new BigEndianNBTStream();
-        $data = $nbt->readCompressed(zip_entry_read($entry, zip_entry_filesize($entry)));
+        $entry = $this->ZipEntries['level'] ?? null;
+        $nbt   = new BigEndianNBTStream();
+        $data  = $nbt->readCompressed(zip_entry_read($entry, zip_entry_filesize($entry)));
 
         if (!($data instanceof CompoundTag) || !$data->hasTag("Data", CompoundTag::class))
             throw new Exception("Invalid level.dat");
@@ -108,6 +114,7 @@ class SimpleMcRegion extends McRegion
 
         zip_entry_close($entry);
     }
+
 
 
 
@@ -122,22 +129,19 @@ class SimpleMcRegion extends McRegion
             return;
 
         $region = new SimpleRegionLoader($regionX, $regionZ);
+        $valid  = false;
 
         try
         {
+            $entry = $this->ZipEntries[$regionX . '.' . $regionZ] ?? null;
 
-            while (is_resource($entry = zip_read($this->ZipResource)))
-            {
-                if (preg_match(sprintf("#region/r.%d.%d.%s#", $regionX, $regionZ, static::REGION_FILE_EXTENSION), zip_entry_name($entry)) !== 1)
-                    continue;
-
-
+            if ($entry) {
+                $valid = true;
                 $region->OpenRegion(zip_entry_read($entry, zip_entry_filesize($entry)));
-
-                zip_entry_close($entry);
-
-                break;
             }
+
+            if (!$valid)
+                throw new \Exception("Region($regionX, $regionZ) wasn't found, creating a new empty region...");
 
         }
         catch (Exception $e)

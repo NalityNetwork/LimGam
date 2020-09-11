@@ -52,17 +52,20 @@ class GameUpdater extends LimTask
      */
     public function onRun(int $currentTick)
     {
+
         if (count($this->Game) < (5 * $this->ChunkID))
         {
             $this->Game->RemoveTask($this->getTaskId());
             return;
         }
 
-        $arenas = array_chunk($this->Game->GetArenas(), 5, false);
+        $arenas = array_values($this->Game->GetArenas());
 
-        if (isset($arenas[$this->ChunkID]))
-            foreach ($arenas[$this->ChunkID] as $arena)
-                $arena->update();
+        for ($i = $this->ChunkID + 4; $i >= $this->ChunkID; --$i)
+        {
+            if (isset($arenas[$i]))
+                $arenas[$i]->Update($currentTick);
+        }
     }
 
 

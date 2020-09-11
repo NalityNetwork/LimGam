@@ -5,6 +5,7 @@ namespace LimGam;
 
 
 use LimGam\Game\GameManager;
+use Performance\Performance;
 use pocketmine\plugin\PluginBase;
 
 

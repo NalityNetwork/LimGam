@@ -180,6 +180,11 @@ class IGamEvent implements EventExecutor, IGamEventListener
                 $action->Process($event, $result);
     }
 
+    public function Unregister(): void
+    {
+        //...
+    }
+
 
 
 }

@@ -35,24 +35,34 @@ class SimpleLevel
     protected static $Cache = [];
 
 
+    public static function AddLevelProvider(string $provider, string $extension): void
+    {
+        if (!is_a($provider, BaseLevelProvider::class, true))
+            throw new Exception($provider . " must be part of " . BaseLevelProvider::class);
+
+        self::$Providers[$extension] = $provider;
+    }
+
+
 
     /**
-     * @param Map    $map
-     * @param string $name Level name
+     * @param Map               $map
+     * @param string            $name Level name
+     * @param BaseLevelProvider $provider
      * @return Level|null
      * @noinspection PhpUnused
      */
-    public static function GetLevel(Map $map, string $name): ?Level
+    public static function GetLevel(Map $map, string $name, BaseLevelProvider $provider = null): ?Level
     {
         try
         {
-            /** @var SimpleMcRegion $provider */
-            $provider = self::GetProvider($map->GetFile());
+            /** @var SimpleMcRegion|BaseLevelProvider $provider */
+            $provider = $provider ?? self::GetProvider($map->GetFile());
 
             if (!$provider)
                 throw new Exception("Cannot find a valid level provider for " . $map->GetFile());
 
-            $level = new Level(Server::getInstance(), $name, $provider->Name($name));
+            $level = new Level(Server::getInstance(), $name, ($provider instanceof SimpleMcRegion) ? $provider->Name($name) : $provider);
 
             //Server::getInstance()->getLevels()[$level->getId()] = $level;
             //(new LevelLoadEvent($level))->call();

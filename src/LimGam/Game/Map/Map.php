@@ -229,7 +229,7 @@ class Map implements JsonSerializable
      * @param Level $level
      * @param bool  $closeOld
      */
-    public function SetLevelObject(Level $level = null, bool $closeOld = true): void
+    public function SetLevelObject(?Level $level = null, bool $closeOld = true): void
     {
         if ($this->LevelObject && $closeOld)
             LimGam::GetInstance()->getServer()->unloadLevel($this->LevelObject, true);

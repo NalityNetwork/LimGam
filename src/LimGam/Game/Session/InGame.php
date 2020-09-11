@@ -5,7 +5,10 @@ namespace LimGam\Game\Session;
 
 
 use Exception;
+use InvalidArgumentException;
 use LimGam\Game\Arena;
+use LimGam\Game\Event\Events\Player\PlayerJoinArena;
+use LimGam\Game\Event\Events\Player\PlayerQuitArena;
 use LimGam\Game\Party;
 use LimGam\Game\Team\Team;
 use LimGam\LimGam;
@@ -44,55 +47,67 @@ class InGame extends LimSession
 
     /**
      * @param Player $player
-     * @param Arena  $arena
-     * @param Party  $party
-     * @param int    $status
-     * @throws Exception
      */
-    public function __construct(Player $player, Arena $arena, ?Party $party, int $status)
+    public function __construct(Player $player)
     {
         parent::__construct($player);
 
+        $this->Status = static::STATUS_BUSY;
+    }
+
+
+
+    /**
+     * @param Arena|null      $arena
+     * @param int        $status
+     * @param Party|null $party
+     * @return $this
+     * @throws Exception
+     */
+    public function SendTo(?Arena $arena, int $status = InGame::STATUS_BUSY): self
+    {
+        if (!$arena)
+        {
+            if ($this->Arena)
+                (new PlayerQuitArena($this))->call();
+
+            $this->SetTeam(null);
+
+            $this->Arena  = $arena;
+            $this->Status = $status;
+
+            return $this;
+        }
+
+
+        if ($arena->IsClosed() || $arena->IsJoinable() === false && $status === static::STATUS_ALIVE)
+            throw new InvalidArgumentException("Cannot join to this arena.");
+
         $this->Arena  = $arena;
-        $this->Party  = $party;
         $this->Status = $status;
 
-        if ($arena->ProcessSession($this, $status) === false)
-            throw new Exception("Unknown error has occurred while creating a new session.");
-
-        #=====================#
-        # Simple party system #
-        #=====================#
-        if ($party)
+        if (!$arena->ProcessSession($this))
         {
+            $this->SendTo(null, static::STATUS_BUSY);
+            throw new Exception("Unknown error has occurred while creating a new session.");
+        }
 
-            if ($party->PlayTogether() && $this->Team->GetFreeSlots() < count($party->GetMembers()))
-                throw new Exception("The team you have joined has not enough slots for your party.");
+        if (!$this->GetTeam())
+            throw new Exception();
 
-            $pMembers = $party->GetMembers();
 
-            if (!$this->Team->AddReservation(...$pMembers))
+        if ($this->OwnsAParty())
+        {
+            foreach ($this->Party->GetMembers() as $member)
             {
-                if ($party->PlayTogether())
-                    throw new Exception("There are not available teams in this match.");
-
-                foreach ($pMembers as $member)
-                {
-                    $member = LimGam::GetInstance()->getServer()->getPlayerExact($member);
-
-                    if (!($member instanceof Player))
-                        continue;
-
-                    LimGam::GetGameManager()->AddSession($member, $arena, null);
-                }
-            }
-            else
-            {
-                foreach ($pMembers as $member)
-                    $arena->GetGame()->Link($member, $arena->GetID());
+                $this->Arena->GetGame()->Link($member, $this->Arena->GetID());
+                $this->Team->AddReservation($member);
             }
         }
 
+        (new PlayerJoinArena($this))->call();
+
+        return $this;
     }
 
 
@@ -100,9 +115,22 @@ class InGame extends LimSession
     /**
      * @return Arena
      */
-    public function GetArena(): Arena
+    public function GetArena(): ?Arena
     {
         return $this->Arena;
+    }
+
+
+
+    /**
+     * @param Party|null $party
+     */
+    public function SetParty(?Party $party): void
+    {
+        if (($this->Party instanceof Party) && $this->Party !== $party)
+            $this->Party->Disband();
+
+        $this->Party = $party;
     }
 
 
@@ -135,7 +163,11 @@ class InGame extends LimSession
      */
     public function SetStatus(int $status): void
     {
+        if (!$this->Team)
+            return;
+
         $this->Status = $status;
+        $this->Team->UpdateStatus();
     }
 
 
@@ -151,21 +183,15 @@ class InGame extends LimSession
 
 
     /**
-     * @param Team $team
-     * @param bool $forceSet
+     * @param Team|null $team
      */
-    public function SetTeam(Team $team, bool $forceSet = false): void
+    public function SetTeam(?Team $team): void
     {
-        if (!$team->IsMember($this->GetName()))
+        if ($team && !$team->IsMember($this->GetName()))
             return;
 
         if ($this->Team)
-        {
-            if (!$forceSet)
-                return;
-
             $this->Team->RemoveMember($this->GetName());
-        }
 
         $this->Team = $team;
     }
@@ -178,6 +204,12 @@ class InGame extends LimSession
     public function GetTeam(): ?Team
     {
         return $this->Team;
+    }
+
+
+    public function InGame(): bool
+    {
+        return ($this->Arena && $this->Team);
     }
 
 
@@ -214,7 +246,7 @@ class InGame extends LimSession
 
     public function Close(): void
     {
-        $this->Team->RemoveMember($this->Player->getName());
+        $this->Team->RemoveMember($this->GetName());
     }
 
 

@@ -20,7 +20,7 @@ class ExpiredLinksUpdater extends LimTask
     /**
      * @inheritDoc
      */
-    public function Start(int $period = 5 * 20, int $delay = 0): LimTask
+    public function Start(int $period = 20, int $delay = 0): LimTask
     {
         LimGam::GetInstance()->getScheduler()->scheduleRepeatingTask($this, $period);
         return $this;
@@ -33,11 +33,11 @@ class ExpiredLinksUpdater extends LimTask
      */
     public function onRun(int $currentTick)
     {
-        $time = time();
-
-        foreach ($this->Game->GetLinks() as $player => $data)
-            if (($time - $data[1]) >= 30)
+        foreach ($this->Game->GetLinks() as $player => &$data)
+        {
+            if (--$data[1] === 0)
                 $this->Game->Unlink($player);
+        }
     }
 
 

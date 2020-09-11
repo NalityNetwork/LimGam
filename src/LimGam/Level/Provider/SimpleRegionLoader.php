@@ -17,6 +17,7 @@ class SimpleRegionLoader extends RegionLoader
 
 
 
+
     /**
      * @param int $regionX
      * @param int $regionZ
@@ -38,6 +39,7 @@ class SimpleRegionLoader extends RegionLoader
     {
         return trigger_error("Method 'open' is not longer working, use 'OpenRegion' instead.", E_USER_WARNING);
     }
+
 
 
 

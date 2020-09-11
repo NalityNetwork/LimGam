@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LimGam\Game\Team;
 
 
-use Countable;
+use Exception;
 use InvalidArgumentException;
 use LimGam\Game\Session\InGame;
 use LimGam\LimGam;
@@ -14,10 +14,8 @@ use LimGam\LimGam;
  * @author  RomnSD
  * @package LimGam\Game\Team
  */
-class Team implements Countable
+class Team
 {
-
-
 
     /** @var string */
     protected $Name;
@@ -31,31 +29,43 @@ class Team implements Countable
     /** @var int */
     protected $Size;
 
+    /** @var string */
+    protected $ArenaID;
+
+    /** @var int */
+    protected $Alive = 0;
+
+    /** @var int */
+    protected $Spectators = 0;
+
+    /** @var int */
+    protected $Busy = 0;
+
     /** @var InGame[] */
-    protected $Members;
+    protected $Members = [];
 
     /** @var string[] */
-    protected $Reservations;
+    protected $Reservations = [];
 
 
 
     /**
      * @param string $name
      * @param string $color
-     * @param int    $size
      * @param bool   $external
+     * @param int    $size
+     * @param string $ArenaID
      */
-    public function __construct(string $name, string $color, bool $external, int $size)
+    public function __construct(string $name, string $color, bool $external, int $size, string $ArenaID = "")
     {
         if ($size < 1)
             throw new InvalidArgumentException("Team size must be greater than zero.");
 
-        $this->Name         = $name;
-        $this->Color        = $color;
-        $this->IsExternal   = $external;
-        $this->Size         = $size;
-        $this->Members      = [];
-        $this->Reservations = [];
+        $this->Name       = $name;
+        $this->Color      = $color;
+        $this->IsExternal = $external;
+        $this->Size       = $size;
+        $this->ArenaID    = $ArenaID;
     }
 
 
@@ -101,11 +111,25 @@ class Team implements Countable
 
 
     /**
+     * @return string
+     */
+    public function GetArenaID(): string
+    {
+        return $this->ArenaID;
+    }
+
+
+
+    /**
+     * @param bool $includeReservations
      * @return int
      */
-    public function GlobalCount(): int
+    public function Count(bool $includeReservations = false): int
     {
-        return ($this->Count() + count($this->Reservations));
+        if ($includeReservations)
+            return count($this->Members) + count($this->Reservations);
+
+        return count($this->Members);
     }
 
 
@@ -115,7 +139,27 @@ class Team implements Countable
      */
     public function GetFreeSlots(): int
     {
-        return ($this->Size - $this->GlobalCount());
+        return ($this->Size - $this->Count(true));
+    }
+
+
+    public function UpdateStatus(): void
+    {
+        $this->Alive      = 0;
+        $this->Spectators = 0;
+        $this->Busy       = 0;
+
+        foreach ($this->Members as $member)
+        {
+            if ($member->IsAlive())
+                $this->Alive++;
+
+            if ($member->IsSpectating())
+                $this->Spectators++;
+
+            if ($member->IsBusy())
+                $this->Busy++;
+        }
     }
 
 
@@ -136,39 +180,49 @@ class Team implements Countable
      * @param InGame $session
      * @return bool
      */
-    public function AddMember(InGame $session): bool
+    public function AddMember(InGame $session): bool //Member is not a member yet
     {
-        if (isset($this->Members[$session->GetName()]) || $session->GetTeam() || ($session->IsSpectating() && $this->CountInGame()))
-            return false;
 
-        if (!$this->IsExternal)
+        if ($session->GetArena())
         {
-            if ($this->IsFull() && !isset($this->Reservations[$session->GetName()]))
+            if ($session->GetArena()->GetID() !== $this->ArenaID)
+                throw new InvalidArgumentException("");
+
+            if (isset($this->Members[$session->GetName()]) || $session->GetTeam())
                 return false;
 
-            unset($this->Reservations[$session->GetName()]);
+            $sname = $session->GetName();
+
+            if (!$this->IsExternal)
+            {
+                if ($this->IsFull() && !isset($this->Reservations[$sname]))
+                    return false;
+
+                unset($this->Reservations[$sname]);
+            }
+
+            /** @var Team $team */
+            foreach ($session->GetArena()->GetTeams() as $team)
+                $team->RemoveReservation($sname);
+
+            $this->Members[$sname] = $session;
+            $this->Members[$sname]->SetTeam($this);
+
+            $this->UpdateStatus();
+
+            return true;
         }
 
-        $sname = $session->GetName();
 
-        /** @var Team $team */
-        foreach ($session->GetArena()->GetTeams() as $team)
-            $team->RemoveReservation($sname);
-
-        $this->Members[$sname] = $session;
-        $this->Members[$sname]->SetTeam($this);
-
-        return true;
+        throw new Exception();
     }
 
 
 
     /**
      * @param string $player
-     * @param string $reason
-     * @noinspection PhpUnusedParameterInspection
      */
-    public function RemoveMember(string $player, string $reason = "unknown"): void
+    public function RemoveMember(string $player): void
     {
         unset($this->Members[$player]);
     }
@@ -187,13 +241,13 @@ class Team implements Countable
 
     /**
      * @param string $message
-     * @param bool   $inGame
+     * @param int    $status
      */
-    public function Message(string $message, bool $inGame = false): void
+    public function Message(string $message, int $status = InGame::STATUS_ALIVE): void
     {
         foreach ($this->Members as $session)
         {
-            if ($session->IsSpectating() && $inGame)
+            if ($session->GetStatus() !== $status)
                 continue;
 
             $session->GetPlayer()->sendMessage($message);
@@ -204,13 +258,13 @@ class Team implements Countable
 
     /**
      * @param string $message
-     * @param bool   $inGame
+     * @param int    $status
      */
-    public function Tip(string $message, bool $inGame = false): void
+    public function Tip(string $message, int $status = InGame::STATUS_ALIVE): void
     {
         foreach ($this->Members as $session)
         {
-            if ($session->IsSpectating() && $inGame)
+            if ($session->GetStatus() !== $status)
                 continue;
 
             $session->GetPlayer()->sendTip($message);
@@ -222,13 +276,13 @@ class Team implements Countable
     /**
      * @param string $message
      * @param string $subtitle
-     * @param bool   $inGame
+     * @param int    $status
      */
-    public function Popup(string $message, string $subtitle = "", bool $inGame = false): void
+    public function Popup(string $message, string $subtitle = "", int $status = InGame::STATUS_ALIVE): void
     {
         foreach ($this->Members as $session)
         {
-            if ($session->IsSpectating() && $inGame)
+            if ($session->GetStatus() !== $status)
                 continue;
 
             $session->GetPlayer()->sendPopup($message, $subtitle);
@@ -248,16 +302,6 @@ class Team implements Countable
 
 
     /**
-     * @return int
-     */
-    public function Count(): int
-    {
-        return count($this->Members);
-    }
-
-
-
-    /**
      * Return how many players are alive in the team
      * @return int
      */
@@ -266,16 +310,7 @@ class Team implements Countable
         if ($this->IsExternal)
             return 0;
 
-        if ($this->IsSolo())
-            return (int) ($this->Members === [] ? false : current($this->Members)->IsAlive());
-
-        $count = 0;
-
-        foreach ($this->Members as $player)
-            if ($player->IsAlive())
-                $count++;
-
-        return $count;
+        return $this->Alive;
     }
 
 
@@ -285,7 +320,7 @@ class Team implements Countable
      */
     public function IsFull(): bool
     {
-        return (($this->Count() + count($this->Reservations)) === $this->Size);
+        return ($this->Count(true) === $this->Size);
     }
 
 
@@ -316,7 +351,7 @@ class Team implements Countable
      */
     public function CanReserveSpace(int $count): bool
     {
-        if ($this->IsSolo() && $count !== 1 || $this->IsFull() || ($this->Size - $this->GlobalCount()) < $count)
+        if ($this->GetFreeSlots() < $count)
             return false;
 
         return true;
@@ -325,22 +360,15 @@ class Team implements Countable
 
 
     /**
-     * @param string ...$players
+     * @param string $player
      * @return bool
      */
-    public function AddReservation(string...$players): bool
+    public function AddReservation(string $player): bool
     {
-        if (!$this->CanReserveSpace(count($players)))
+        if (!$this->GetFreeSlots() || $this->IsMember($player))
             return false;
 
-        foreach ($players as $player)
-        {
-            if ($this->IsMember($player))
-                continue;
-
-            $this->Reservations[$player] = time();
-        }
-
+        $this->Reservations[$player] = time();
         return true;
     }
 
@@ -373,10 +401,7 @@ class Team implements Countable
     public function RemoveReservation(string...$players): void
     {
         foreach ($players as $player)
-        {
-            if (isset($this->Reservations[$player]))
-                unset($this->Reservations[$player]);
-        }
+            unset($this->Reservations[$player]);
     }
 
 
@@ -384,7 +409,7 @@ class Team implements Countable
     public function __destruct()
     {
         foreach ($this->Members as $member)
-            $this->RemoveMember($member->GetName(), "Team::__destruct() was called.");
+            $this->RemoveMember($member->GetName());
     }
 
 

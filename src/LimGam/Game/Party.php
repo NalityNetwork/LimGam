@@ -1,9 +1,11 @@
-<?php declare(strict_types = 1);
+<?php /** @noinspection PhpUnused */
+declare(strict_types = 1);
 
 namespace LimGam\Game;
 
 
 use InvalidArgumentException;
+use LimGam\LimGam;
 
 
 /**
@@ -21,24 +23,16 @@ class Party
     /** @var array */
     protected $Members;
 
-    /** @var bool */
-    protected $MustPlayTogether;
-
 
 
     /**
      * @param string $owner
-     * @param bool   $playTogether
      * @param array  $members
      */
-    public function __construct(string $owner, bool $playTogether, string...$members)
+    public function __construct(string $owner, array $members)
     {
-        if ($members === [])
-            throw new InvalidArgumentException("Party cannot be empty.");
-
-        $this->Owner            = $owner;
-        $this->MustPlayTogether = $playTogether;
-        $this->Members          = $members;
+        $this->Owner   = $owner;
+        $this->Members = (function(string ...$check){$list = []; foreach ($check as $index) $list[$index] = $index; return $list;})(...$members);
     }
 
 
@@ -51,14 +45,39 @@ class Party
         return $this->Owner;
     }
 
+    public function SetOwner(string $member): void
+    {
+        if ($this->Owner === $member || !isset($this->Members[$member]))
+            throw new InvalidArgumentException();
+
+        unset($this->Members[$member]);
+        $this->Members[$this->Owner] = $this->Owner;
+        $this->Owner = $member;
+    }
+
+
+
+    public function AddPlayer(string $player): void
+    {
+        $this->Members[$player] = $player;
+    }
+
 
 
     /**
-     * @return bool
+     * @param string $member
      */
-    public function PlayTogether(): bool
+    public function RemoveMember(string $member): void
     {
-        return $this->MustPlayTogether;
+        if (!isset($this->Members[$member]))
+            return;
+
+        $session = LimGam::GetGameManager()->GetSession($member);
+
+        if ($session)
+            $session->SetParty(null);
+
+        unset($this->Members[$member]);
     }
 
 
@@ -69,6 +88,23 @@ class Party
     public function GetMembers(): array
     {
         return $this->Members;
+    }
+
+
+
+    /**
+     * Disband the party.
+     */
+    public function Disband(): void
+    {
+        $members  = $this->Members;
+        $members += [$this->Owner];
+
+        foreach ($members as $member)
+        {
+            if ($session = LimGam::GetGameManager()->GetSession($member))
+                $session->SetParty(null);
+        }
     }
 
 

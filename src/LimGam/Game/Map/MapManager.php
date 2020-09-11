@@ -4,6 +4,8 @@ declare(strict_types = 1);
 namespace LimGam\Game\Map;
 
 
+use InvalidArgumentException;
+use LimGam\Level\Provider\SimpleMcRegion;
 use RecursiveDirectoryIterator;
 use ZipArchive;
 use pocketmine\level\Level;
@@ -127,6 +129,10 @@ class MapManager
      */
     public function CompressMap(Level $level, string $to): void
     {
+
+        if ($level->getProvider() instanceof SimpleMcRegion)
+            throw new InvalidArgumentException("Cannot compress a level using SimpleMcRegion.");
+        
         $zip  = new ZipArchive();
         $path = realpath(DATA . "worlds" . DIRECTORY_SEPARATOR . $level->getFolderName() . DIRECTORY_SEPARATOR);
 
