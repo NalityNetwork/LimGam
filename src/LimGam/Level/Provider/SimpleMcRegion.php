@@ -27,6 +27,7 @@ class SimpleMcRegion extends McRegion
     /** @var resource */
     protected $ZipResource;
 
+    /** @var array */
     protected $ZipEntries = [];
 
 
@@ -196,6 +197,14 @@ class SimpleMcRegion extends McRegion
     public static function generate(string $path, string $name, int $seed, string $generator, array $options = []): void
     {
         return;
+    }
+
+    public function __destruct()
+    {
+        foreach ($this->ZipEntries as $entry) {
+            @zip_entry_close($entry);
+        }
+        @zip_close($this->ZipResource);
     }
 
 

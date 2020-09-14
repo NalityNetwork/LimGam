@@ -31,9 +31,6 @@ class SimpleLevel
         SimpleAnvil::REGION_FILE_EXTENSION    => SimpleAnvil::class
     ];
 
-    /** @var array */
-    protected static $Cache = [];
-
 
     public static function AddLevelProvider(string $provider, string $extension): void
     {
@@ -93,8 +90,6 @@ class SimpleLevel
      */
     public static function GetProvider(string $file): ?BaseLevelProvider
     {
-        if (isset(static::$Cache[$file]))
-            return clone static::$Cache[$file];
 
         $zip = zip_open($file);
         $ext = null;
@@ -105,6 +100,7 @@ class SimpleLevel
         while ($entry = zip_read($zip))
         {
             $entry_name = zip_entry_name($entry);
+            zip_entry_close($entry);
 
             if (basename(dirname($entry_name)) !== "region")
                 continue;
@@ -123,8 +119,7 @@ class SimpleLevel
         if (!isset(static::$Providers[$ext]))
             return null;
 
-        static::$Cache[$file] = new static::$Providers[$ext]($file);
-        return static::$Cache[$file];
+        return new static::$Providers[$ext]($file);
     }
 
 

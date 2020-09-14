@@ -5,6 +5,7 @@ namespace LimGam\Level\Provider;
 
 
 use Exception;
+use pocketmine\level\format\io\region\RegionGarbageMap;
 use pocketmine\level\format\io\region\RegionLoader;
 
 
@@ -25,8 +26,9 @@ class SimpleRegionLoader extends RegionLoader
      */
     public function __construct(int $regionX, int $regionZ)
     {
-        $this->x = $regionX;
-        $this->z = $regionZ;
+        $this->x            = $regionX;
+        $this->z            = $regionZ;
+        $this->garbageTable = new RegionGarbageMap([]);
     }
 
 
