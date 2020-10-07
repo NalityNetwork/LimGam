@@ -6,6 +6,7 @@ namespace LimGam\Game\Map;
 
 use InvalidArgumentException;
 use LimGam\Level\Provider\SimpleMcRegion;
+use LimGam\LimGam;
 use RecursiveDirectoryIterator;
 use ZipArchive;
 use pocketmine\level\Level;
@@ -129,16 +130,16 @@ class MapManager
      */
     public function CompressMap(Level $level, string $to): void
     {
-
         if ($level->getProvider() instanceof SimpleMcRegion)
             throw new InvalidArgumentException("Cannot compress a level using SimpleMcRegion.");
-        
+
         $zip  = new ZipArchive();
         $path = realpath(DATA . "worlds" . DIRECTORY_SEPARATOR . $level->getFolderName() . DIRECTORY_SEPARATOR);
 
         if ($zip->open(sprintf("%s%s.zip", $to, $level->getFolderName()), ZipArchive::CREATE))
         {
-            foreach (new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS) as $file)
+            $files = new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS);
+            foreach (new \RecursiveIteratorIterator($files, \RecursiveIteratorIterator::CHILD_FIRST) as $file)
             {
                 $file = $file->getRealPath();
                 if (is_file($file))
