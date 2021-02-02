@@ -24,40 +24,40 @@ class Map implements JsonSerializable
 
 
     /** @var string */
-    protected $File;
+    protected $file;
 
     /** @var string */
-    protected $Name;
+    protected $name;
 
     /** @var string */
-    protected $Game;
+    protected $game;
 
     /** @var bool */
-    protected $AllowTeams;
+    protected $allowTeams;
 
     /** @var array */
-    protected $Builders;
+    protected $builders;
 
     /** @var Position[] */
-    protected $Spawns;
+    protected $spawns;
 
     /** @var Vector3 */
-    protected $TemporalVector;
+    protected $temporalVector;
 
     /** @var int */
-    protected $MapID;
+    protected $mapID;
 
     /** @var Location|null */
-    protected $LobbyLocation;
+    protected $lobbyLocation;
 
     /** @var Location|null */
-    protected $SpectatorLocation;
+    protected $spectatorLocation;
 
     /** @var Level|null */
-    protected $LevelObject;
+    protected $levelObject;
 
     /** @var int */
-    protected static $MapCounter = 0;
+    protected static $mapCounter = 0;
 
     /** @var array Default config template */
     public const CONFIG = [
@@ -75,18 +75,18 @@ class Map implements JsonSerializable
      */
     public function __construct(array $config)
     {
-        $this->File              = realpath($config["File"]);
-        $this->Name              = basename($this->File, ".zip");
-        $this->Game              = $config["Game"];
-        $this->AllowTeams        = $config["AllowTeams"];
-        $this->Builders          = $config["Builders"];
-        $this->Spawns            = $config["Spawns"];
-        $this->LobbyLocation     = new Location();
-        $this->SpectatorLocation = new Location();
-        $this->TemporalVector    = new Vector3(0, 100, 0);
-        $this->MapID             = static::$MapCounter++;
+        $this->file              = realpath($config["File"]);
+        $this->name              = basename($this->file, ".zip");
+        $this->game              = $config["Game"];
+        $this->allowTeams        = $config["AllowTeams"];
+        $this->builders          = $config["Builders"];
+        $this->spawns            = $config["Spawns"];
+        $this->lobbyLocation     = new Location();
+        $this->spectatorLocation = new Location();
+        $this->temporalVector    = new Vector3(0, 100, 0);
+        $this->mapID             = static::$mapCounter++;
 
-        foreach ($this->Spawns as &$vector)
+        foreach ($this->spawns as &$vector)
             $vector = new Position((float) ($vector[0] ?? 0), (float) ($vector[1] ?? 0), (float) ($vector[2] ?? 0));
     }
 
@@ -95,12 +95,12 @@ class Map implements JsonSerializable
     /**
      * @param string $name
      */
-    public function SetName(string $name): void
+    public function setName(string $name): void
     {
-        if ($this->LevelObject)
+        if ($this->levelObject)
             return;
 
-        $this->Name = $name;
+        $this->name = $name;
     }
 
 
@@ -108,9 +108,9 @@ class Map implements JsonSerializable
     /**
      * @return string
      */
-    public function GetName(): string
+    public function getName(): string
     {
-        return $this->Name;
+        return $this->name;
     }
 
 
@@ -118,9 +118,9 @@ class Map implements JsonSerializable
     /**
      * @return string
      */
-    public function GetFile(): string
+    public function getFile(): string
     {
-        return $this->File;
+        return $this->file;
     }
 
 
@@ -128,9 +128,9 @@ class Map implements JsonSerializable
     /**
      * @return string
      */
-    public function GetGame(): string
+    public function getGame(): string
     {
-        return $this->Game;
+        return $this->game;
     }
 
 
@@ -138,9 +138,9 @@ class Map implements JsonSerializable
     /**
      * @return bool
      */
-    public function AllowTeams(): bool
+    public function allowTeams(): bool
     {
-        return $this->AllowTeams;
+        return $this->allowTeams;
     }
 
 
@@ -148,9 +148,9 @@ class Map implements JsonSerializable
     /**
      * @return array
      */
-    public function GetBuilders(): array
+    public function getBuilders(): array
     {
-        return $this->Builders;
+        return $this->builders;
     }
 
 
@@ -158,9 +158,9 @@ class Map implements JsonSerializable
     /**
      * @return Position[]
      */
-    public function GetSpawns(): array
+    public function getSpawns(): array
     {
-        return $this->Spawns;
+        return $this->spawns;
     }
 
 
@@ -168,9 +168,9 @@ class Map implements JsonSerializable
     /**
      * @param Location $lobby
      */
-    public function SetLobby(Location $lobby): void
+    public function setLobby(Location $lobby): void
     {
-        $this->LobbyLocation = $lobby;
+        $this->lobbyLocation = $lobby;
     }
 
 
@@ -178,9 +178,9 @@ class Map implements JsonSerializable
     /**
      * @return Location
      */
-    public function GetLobby(): Location
+    public function getLobby(): Location
     {
-        return $this->LobbyLocation;
+        return $this->lobbyLocation;
     }
 
 
@@ -188,9 +188,9 @@ class Map implements JsonSerializable
     /**
      * @param Location $spectatorSpawn
      */
-    public function SetSpectatorSpawn(Location $spectatorSpawn): void
+    public function setSpectatorSpawn(Location $spectatorSpawn): void
     {
-        $this->SpectatorLocation = $spectatorSpawn;
+        $this->spectatorLocation = $spectatorSpawn;
     }
 
 
@@ -198,9 +198,9 @@ class Map implements JsonSerializable
     /**
      * @return Location
      */
-    public function GetSpectatorSpawn(): Location
+    public function getSpectatorSpawn(): Location
     {
-        return $this->SpectatorLocation;
+        return $this->spectatorLocation;
     }
 
 
@@ -208,9 +208,9 @@ class Map implements JsonSerializable
     /**
      * @return Vector3
      */
-    public function GetTemporalVector(): Vector3
+    public function getTemporalVector(): Vector3
     {
-        return $this->TemporalVector;
+        return $this->temporalVector;
     }
 
 
@@ -218,9 +218,9 @@ class Map implements JsonSerializable
     /**
      * @return int
      */
-    public function GetID(): int
+    public function getID(): int
     {
-        return $this->MapID;
+        return $this->mapID;
     }
 
 
@@ -229,15 +229,15 @@ class Map implements JsonSerializable
      * @param Level $level
      * @param bool  $closeOld
      */
-    public function SetLevelObject(?Level $level = null, bool $closeOld = true): void
+    public function setLevelObject(?Level $level = null, bool $closeOld = true): void
     {
-        if ($this->LevelObject && $closeOld)
-            LimGam::GetInstance()->getServer()->unloadLevel($this->LevelObject, true);
+        if ($this->levelObject && $closeOld)
+            LimGam::GetInstance()->getServer()->unloadLevel($this->levelObject, true);
 
-        $this->LevelObject = $level;
+        $this->levelObject = $level;
 
-        foreach ($this->Spawns as &$spawn)
-            $spawn->setLevel($this->LevelObject);
+        foreach ($this->spawns as &$spawn)
+            $spawn->setLevel($this->levelObject);
     }
 
 
@@ -245,9 +245,9 @@ class Map implements JsonSerializable
     /**
      * @return Level|null
      */
-    public function GetLevelObject(): ?Level
+    public function getLevelObject(): ?Level
     {
-        return $this->LevelObject;
+        return $this->levelObject;
     }
 
 
@@ -260,9 +260,9 @@ class Map implements JsonSerializable
      * @return Level
      * @throws Exception
      */
-    public function ToLevelObject(string $customName = null): ?Level
+    public function toLevelObject(string $customName = null): ?Level
     {
-        $level = SimpleLevel::GetLevel($this, $customName ? $customName : $this->GetName());
+        $level = SimpleLevel::GetLevel($this, $customName ? $customName : $this->getName());
 
         if (!$level)
             throw new Exception("Occurred an error while creating the level.");
@@ -279,14 +279,14 @@ class Map implements JsonSerializable
     {
         $spawns = [];
 
-        foreach ($this->Spawns as $spawn)
+        foreach ($this->spawns as $spawn)
             $spawns[] = [$spawn->x, $spawn->y, $spawn->z];
 
         return [
-            "File"       => $this->File,
-            "Game"       => $this->Game,
-            "AllowTeams" => $this->AllowTeams,
-            "Builders"   => $this->Builders,
+            "File"       => $this->file,
+            "Game"       => $this->game,
+            "AllowTeams" => $this->allowTeams,
+            "Builders"   => $this->builders,
             "Spawns"     => $spawns
         ];
     }
@@ -295,8 +295,8 @@ class Map implements JsonSerializable
 
     public function __destruct()
     {
-        if ($this->LevelObject && !($this->LevelObject->isClosed()))
-            LimGam::GetInstance()->getServer()->unloadLevel($this->LevelObject);
+        if ($this->levelObject && !($this->levelObject->isClosed()))
+            LimGam::GetInstance()->getServer()->unloadLevel($this->levelObject);
     }
 
 

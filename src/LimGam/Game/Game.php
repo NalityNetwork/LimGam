@@ -25,22 +25,22 @@ class Game implements Countable
 
 
     /** @var string */
-    protected $Name;
+    protected $name;
 
     /** @var Arena[] */
-    protected $Arenas;
+    protected $arenas;
 
     /** @var string[] */
-    protected $Links;
+    protected $links;
 
     /** @var IGamEvent[] */
-    protected $Events;
+    protected $events;
 
     /** @var GameUpdater[] */
-    protected $Tasks;
+    protected $tasks;
 
     /** @var ExpiredLinksUpdater */
-    protected $LinksUpdater;
+    protected $linksUpdater;
 
 
 
@@ -49,11 +49,11 @@ class Game implements Countable
      */
     public function __construct(string $name)
     {
-        $this->Name         = $name;
-        $this->Arenas       = [];
-        $this->Links        = [];
-        $this->Tasks        = [(new GameUpdater($this, 0))->Start()];
-        $this->LinksUpdater = (new ExpiredLinksUpdater($this))->Start();
+        $this->name         = $name;
+        $this->arenas       = [];
+        $this->links        = [];
+        $this->tasks        = [(new GameUpdater($this, 0))->start()];
+        $this->linksUpdater = (new ExpiredLinksUpdater($this))->start();
     }
 
 
@@ -61,9 +61,9 @@ class Game implements Countable
     /**
      * @return string
      */
-    public function GetName(): string
+    public function getName(): string
     {
-        return $this->Name;
+        return $this->name;
     }
 
 
@@ -73,7 +73,7 @@ class Game implements Countable
      */
     public function count(): int
     {
-        return count($this->Arenas);
+        return count($this->arenas);
     }
 
 
@@ -81,9 +81,9 @@ class Game implements Countable
     /**
      * @return array
      */
-    public function GetArenas(): array
+    public function getArenas(): array
     {
-        return $this->Arenas;
+        return $this->arenas;
     }
 
 
@@ -92,9 +92,9 @@ class Game implements Countable
      * @param string $player
      * @param string $arenaID
      */
-    public function Link(string $player, string $arenaID): void
+    public function link(string $player, string $arenaID): void
     {
-        $this->Links[$player] = [$arenaID, 30];
+        $this->links[$player] = [$arenaID, 30];
     }
 
 
@@ -102,9 +102,9 @@ class Game implements Countable
     /**
      * @param string $player
      */
-    public function Unlink(string $player): void
+    public function unlink(string $player): void
     {
-        unset($this->Links[$player]);
+        unset($this->links[$player]);
     }
 
 
@@ -112,9 +112,9 @@ class Game implements Countable
     /**
      * @return array|string[]
      */
-    public function GetLinks(): array
+    public function getLinks(): array
     {
-        return $this->Links;
+        return $this->links;
     }
 
 
@@ -122,9 +122,9 @@ class Game implements Countable
     /**
      * @return ExpiredLinksUpdater|null
      */
-    public function GetLinksUpdater(): ?ExpiredLinksUpdater
+    public function getLinksUpdater(): ?ExpiredLinksUpdater
     {
-        return $this->LinksUpdater;
+        return $this->linksUpdater;
     }
 
 
@@ -133,18 +133,18 @@ class Game implements Countable
      * @param Arena $arena
      * @throws Exception
      */
-    public function AddArena(Arena $arena): void
+    public function addArena(Arena $arena): void
     {
-        if (isset($this->Arenas[$arena->GetID()]))
+        if (isset($this->arenas[$arena->getID()]))
             throw new Exception("Cannot add twice an arena.");
 
-        $this->Arenas[$arena->GetID()] = $arena;
+        $this->arenas[$arena->getID()] = $arena;
 
         $total = $this->count();
         $div   = (int) ($total / 5);
 
         if ((int) ($total % 5) === 0 && $total > 0)
-            $this->Tasks[$div] = (new GameUpdater($this, $div))->Start();
+            $this->tasks[$div] = (new GameUpdater($this, $div))->start();
     }
 
 
@@ -152,14 +152,14 @@ class Game implements Countable
     /**
      * @param string $arenaID
      */
-    public function RemoveArena(string $arenaID): void
+    public function removeArena(string $arenaID): void
     {
-        if (!isset($this->Arenas[$arenaID]))
+        if (!isset($this->arenas[$arenaID]))
             return;
 
         try
         {
-            $this->Arenas[$arenaID]->Close();
+            $this->arenas[$arenaID]->close();
         }
         catch (Throwable $e)
         {
@@ -167,7 +167,7 @@ class Game implements Countable
         }
         finally
         {
-            unset($this->Arenas[$arenaID]);
+            unset($this->arenas[$arenaID]);
         }
 
     }
@@ -178,9 +178,9 @@ class Game implements Countable
      * @param string $id
      * @return Arena|null
      */
-    public function GetArena(string $id): ?Arena
+    public function getArena(string $id): ?Arena
     {
-        return ($this->Arenas[$id] ?? null);
+        return ($this->arenas[$id] ?? null);
     }
 
 
@@ -189,14 +189,14 @@ class Game implements Countable
      * @param string|null $player
      * @return Arena|null
      */
-    public function GetFreeArena(string $player = null): ?Arena
+    public function getFreeArena(string $player = null): ?Arena
     {
-        if ($player && isset($this->Links[$player]))
-            return $this->GetArena($this->Links[$player][0]);
+        if ($player && isset($this->links[$player]))
+            return $this->getArena($this->links[$player][0]);
 
-        foreach ($this->Arenas as $arena)
+        foreach ($this->arenas as $arena)
         {
-            if ($arena->GetFreeSlots() > 0 && $arena->IsJoinable())
+            if ($arena->getFreeSlots() > 0 && $arena->isJoinable())
                 return $arena;
         }
 
@@ -208,19 +208,19 @@ class Game implements Countable
     /**
      * @param int $taskID
      */
-    public function RemoveTask(int $taskID): void
+    public function removeTask(int $taskID): void
     {
-        if (count($this->Tasks) < 2)
+        if (count($this->tasks) < 2)
             return;
 
         /** @var GameUpdater $task */
-        foreach ($this->Tasks as $i => $task)
+        foreach ($this->tasks as $i => $task)
         {
             if ($task->getTaskId() !== $taskID)
                 continue;
 
             LimGam::GetInstance()->getScheduler()->cancelTask($taskID);
-            unset($this->Tasks[$taskID]);
+            unset($this->tasks[$taskID]);
 
             return;
         }
@@ -231,22 +231,22 @@ class Game implements Countable
     /**
      * @param int $taskID
      */
-    public function RemoveTaskByChunkID(int $taskID): void
+    public function removeTaskByChunkID(int $taskID): void
     {
-        if (count($this->Tasks) < 2)
+        if (count($this->tasks) < 2)
             return;
 
         /**
          * @var int         $i
          * @var GameUpdater $task
          */
-        foreach ($this->Tasks as $i => $task)
+        foreach ($this->tasks as $i => $task)
         {
             if ($i !== $taskID)
                 continue;
 
             LimGam::GetInstance()->getScheduler()->cancelTask($task->getTaskId());
-            unset($this->Tasks[$i]);
+            unset($this->tasks[$i]);
 
             return;
         }
@@ -257,12 +257,12 @@ class Game implements Countable
     /**
      * @param IGamEvent $event
      */
-    public function AddEvent(IGamEvent $event): void
+    public function addEvent(IGamEvent $event): void
     {
-        if ($event->GetGame() !== $this->Name)
+        if ($event->getGame() !== $this->name)
             throw new InvalidArgumentException("Trying to add an event with incompatible game type is not acceptable.");
 
-        $this->Events[$event->GetEvent()] = $event;
+        $this->events[$event->getEvent()] = $event;
     }
 
 
@@ -271,9 +271,9 @@ class Game implements Countable
      * @param string $event
      * @return IGamEvent|null
      */
-    public function GetEvent(string $event): ?IGamEvent
+    public function getEvent(string $event): ?IGamEvent
     {
-        return ($this->Events[$event] ?? null);
+        return ($this->events[$event] ?? null);
     }
 
 
@@ -281,12 +281,12 @@ class Game implements Countable
     /**
      * @param string $event
      */
-    public function RemoveEvent(string $event): void
+    public function removeEvent(string $event): void
     {
-        if (isset($this->Events[$event]))
-            $this->Events[$event]->Unregister();
+        if (isset($this->events[$event]))
+            $this->events[$event]->unregister();
 
-        unset($this->Events[$event]);
+        unset($this->events[$event]);
     }
 
 
@@ -294,9 +294,9 @@ class Game implements Countable
     /**
      * @return array|IGamEvent[]
      */
-    public function GetEvents(): array
+    public function getEvents(): array
     {
-        return $this->Events;
+        return $this->events;
     }
 
 

@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpUnused */
+<?php
 declare(strict_types = 1);
 
 namespace LimGam\Game\Event\Events\Entity;
@@ -19,7 +19,7 @@ class FakeDeathEvent extends EntityEvent implements IGamEventListener
 
 
     /** @var array */
-    protected $Drops;
+    protected $drops;
 
 
 
@@ -30,7 +30,7 @@ class FakeDeathEvent extends EntityEvent implements IGamEventListener
     public function __construct(Entity $entity, array $drops)
     {
         $this->entity = $entity;
-        $this->Drops  = $drops;
+        $this->drops  = $drops;
     }
 
 
@@ -38,9 +38,9 @@ class FakeDeathEvent extends EntityEvent implements IGamEventListener
     /**
      * @return array
      */
-    public function GetDrops(): array
+    public function getDrops(): array
     {
-        return $this->Drops;
+        return $this->drops;
     }
 
 

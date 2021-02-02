@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpUnused */
+<?php
 declare(strict_types = 1);
 
 namespace LimGam\Game\Event\Events\Arena;
@@ -18,7 +18,7 @@ class GameOver extends Event
 
 
     /** @var Arena */
-    protected $Arena;
+    protected $arena;
 
 
 
@@ -27,7 +27,7 @@ class GameOver extends Event
      */
     public function __construct(Arena $arena)
     {
-        $this->Arena = $arena;
+        $this->arena = $arena;
     }
 
 
@@ -35,9 +35,9 @@ class GameOver extends Event
     /**
      * @return Arena
      */
-    public function GetArena(): Arena
+    public function getArena(): Arena
     {
-        return $this->Arena;
+        return $this->arena;
     }
 
 

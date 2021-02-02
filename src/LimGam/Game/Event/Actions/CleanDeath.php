@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpUnused */
+<?php
 declare(strict_types = 1);
 
 namespace LimGam\Game\Event\Actions;
@@ -36,7 +36,7 @@ class CleanDeath extends EventAction
     /**
      * @inheritDoc
      */
-    public function Process(Event $event, $result)
+    public function process(Event $event, $result)
     {
         if ($event->isCancelled() || !($result instanceof InGame))
             return;
@@ -44,7 +44,7 @@ class CleanDeath extends EventAction
         /** @var EntityDamageEvent $event */
         if ($event->getFinalDamage() >= $event->getEntity()->getHealth())
         {
-            if ($result->GetArena()->GetStatus(Arena::STATUS_RUNNING))
+            if ($result->getArena()->getStatus(Arena::STATUS_RUNNING))
                 (new FakeDeathEvent($event->getEntity(), ($event->getEntity() instanceof Living) ? $event->getEntity()->getDrops() : []))->call();
 
             $event->setCancelled();
@@ -56,7 +56,7 @@ class CleanDeath extends EventAction
     /**
      * @inheritDoc
      */
-    public function GetName(): string
+    public function getName(): string
     {
         return "CleanDeath";
     }
@@ -66,7 +66,7 @@ class CleanDeath extends EventAction
     /**
      * @inheritDoc
      */
-    public function GetEvent(): string
+    public function getEvent(): string
     {
         return EntityDamageEvent::class;
     }

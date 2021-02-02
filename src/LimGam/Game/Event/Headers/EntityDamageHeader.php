@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpUnused */
+<?php
 declare(strict_types = 1);
 
 namespace LimGam\Game\Event\Headers;
@@ -23,18 +23,18 @@ class EntityDamageHeader extends EventHeader
     /**
      * @inheritDoc
      */
-    public function Process(Event $event, $result)
+    public function process(Event $event, $result)
     {
         /** @var EntityDamageEvent $event */
         if (!($event->getEntity() instanceof Player))
             return false;
 
-        $session = LimGam::GetGameManager()->GetSession($event->getEntity()->getName());
+        $session = LimGam::GetGameManager()->getSession($event->getEntity()->getName());
 
         if ($session === null)
             return false;
 
-        if ($session->GetArena()->GetGame()->GetName() !== $this->Game)
+        if ($session->getArena()->getGame()->getName() !== $this->game)
             return false;
 
         return $session;
@@ -45,7 +45,7 @@ class EntityDamageHeader extends EventHeader
     /**
      * @inheritDoc
      */
-    public function GetName(): string
+    public function getName(): string
     {
         return "EntityDamageHeader";
     }
@@ -55,7 +55,7 @@ class EntityDamageHeader extends EventHeader
     /**
      * @inheritDoc
      */
-    public function GetEvent(): string
+    public function getEvent(): string
     {
         return EntityDamageEvent::class;
     }
@@ -65,7 +65,7 @@ class EntityDamageHeader extends EventHeader
     /**
      * @return bool
      */
-    public function ReturnSession(): bool
+    public function returnSession(): bool
     {
         return true;
     }

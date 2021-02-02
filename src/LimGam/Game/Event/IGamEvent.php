@@ -23,23 +23,23 @@ class IGamEvent implements EventExecutor, IGamEventListener
 
 
     /** @var string */
-    protected $Game;
+    protected $game;
 
     /** @var string */
-    protected $Event;
+    protected $event;
 
     /** @var EventHeader */
-    protected $Header;
+    protected $header;
 
     /** @var EventAction[] */
-    protected $Actions;
+    protected $actions;
 
 
     public const PRIORITY_LOW    = 2;
     public const PRIORITY_NORMAL = 1;
     public const PRIORITY_HIGH   = 0;
 
-    protected static $PRIORITIES = [
+    protected static $pRIORITIES = [
         IGamEvent::PRIORITY_LOW    => true,
         IGamEvent::PRIORITY_NORMAL => true,
         IGamEvent::PRIORITY_HIGH   => true
@@ -54,9 +54,9 @@ class IGamEvent implements EventExecutor, IGamEventListener
      */
     public function __construct(string $game, string $event, int $priority = EventPriority::NORMAL)
     {
-        $this->Game    = $game;
-        $this->Event   = $event;
-        $this->Actions = [];
+        $this->game    = $game;
+        $this->event   = $event;
+        $this->actions = [];
 
         LimGam::GetInstance()->getServer()->getPluginManager()->registerEvent($event, $this, $priority, $this, LimGam::GetInstance());
     }
@@ -66,9 +66,9 @@ class IGamEvent implements EventExecutor, IGamEventListener
     /**
      * @return string
      */
-    public function GetGame(): string
+    public function getGame(): string
     {
-        return $this->Game;
+        return $this->game;
     }
 
 
@@ -76,9 +76,9 @@ class IGamEvent implements EventExecutor, IGamEventListener
     /**
      * @return string
      */
-    public function GetEvent(): string
+    public function getEvent(): string
     {
-        return $this->Event;
+        return $this->event;
     }
 
 
@@ -86,12 +86,12 @@ class IGamEvent implements EventExecutor, IGamEventListener
     /**
      * @param EventHeader $action
      */
-    public function SetHeader(EventHeader $action)
+    public function setHeader(EventHeader $action)
     {
-        if ($this->IsValid($action))
+        if ($this->isValid($action))
         {
-            $this->Header = $action;
-            $this->Header->SetGame($this->Game);
+            $this->header = $action;
+            $this->header->setGame($this->game);
         }
     }
 
@@ -100,14 +100,14 @@ class IGamEvent implements EventExecutor, IGamEventListener
     /**
      * @param EventAction $action
      */
-    public function AddAction(EventAction $action): void
+    public function addAction(EventAction $action): void
     {
-        $this->IsValid($action);
+        $this->isValid($action);
 
-        $this->Actions[$action->GetPriority()][$action->GetName()] = clone $action;
-        $this->Actions[$action->GetPriority()][$action->GetName()]->SetGame($this->Game);
+        $this->actions[$action->getPriority()][$action->getName()] = clone $action;
+        $this->actions[$action->getPriority()][$action->getName()]->setGame($this->game);
 
-        rsort($this->Actions);
+        rsort($this->actions);
     }
 
 
@@ -115,9 +115,9 @@ class IGamEvent implements EventExecutor, IGamEventListener
     /**
      * @param string $action
      */
-    public function RemoveAction(string $action): void
+    public function removeAction(string $action): void
     {
-        foreach ($this->Actions as &$actions)
+        foreach ($this->actions as &$actions)
             if (isset($actions[$action]))
                 unset($actions[$action]);
     }
@@ -128,9 +128,9 @@ class IGamEvent implements EventExecutor, IGamEventListener
      * @param string $action
      * @return bool
      */
-    public function HasAction(string $action): bool
+    public function hasAction(string $action): bool
     {
-        foreach ($this->Actions as $actions)
+        foreach ($this->actions as $actions)
             if (isset($actions[$action]))
                 return true;
 
@@ -143,16 +143,16 @@ class IGamEvent implements EventExecutor, IGamEventListener
      * @param EventAction $action
      * @return bool
      */
-    public function IsValid(EventAction $action): bool
+    public function isValid(EventAction $action): bool
     {
-        if (!is_a($action->GetEvent(), $this->Event, true))
-            throw new InvalidArgumentException($action->GetEvent() . " is not part of " . $this->Event);
+        if (!is_a($action->getEvent(), $this->event, true))
+            throw new InvalidArgumentException($action->getEvent() . " is not part of " . $this->event);
 
-        if ($action->GetEvent() !== $this->Event)
-            throw new InvalidArgumentException($action->GetName() . " must listen for " . $this->Event . " not for " . $action->GetEvent());
+        if ($action->getEvent() !== $this->event)
+            throw new InvalidArgumentException($action->getName() . " must listen for " . $this->event . " not for " . $action->getEvent());
 
-        if (!isset(static::$PRIORITIES[$action->GetPriority()]))
-            throw new InvalidArgumentException($action->GetName() . " has an invalid priority level.");
+        if (!isset(static::$pRIORITIES[$action->getPriority()]))
+            throw new InvalidArgumentException($action->getName() . " has an invalid priority level.");
 
         return true;
     }
@@ -167,20 +167,20 @@ class IGamEvent implements EventExecutor, IGamEventListener
     {
         $result = null;
 
-        if ($this->Header)
+        if ($this->header)
         {
-            $result = $this->Header->Process($event, null);
+            $result = $this->header->process($event, null);
 
-            if ($this->Header->ReturnSession() && !($result instanceof InGame))
+            if ($this->header->returnSession() && !($result instanceof InGame))
                 return;
         }
 
-        foreach ($this->Actions as $actions)
+        foreach ($this->actions as $actions)
             foreach ($actions as $action)
-                $action->Process($event, $result);
+                $action->process($event, $result);
     }
 
-    public function Unregister(): void
+    public function unregister(): void
     {
         //...
     }

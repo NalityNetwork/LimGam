@@ -18,7 +18,7 @@ abstract class LimTask extends Task
 
 
     /** @var Game */
-    protected $Game;
+    protected $game;
 
 
 
@@ -27,7 +27,7 @@ abstract class LimTask extends Task
      */
     public function __construct(Game $game)
     {
-        $this->Game = $game;
+        $this->game = $game;
     }
 
 
@@ -35,9 +35,9 @@ abstract class LimTask extends Task
     /**
      * @return Game
      */
-    public function GetGame(): Game
+    public function getGame(): Game
     {
-        return $this->Game;
+        return $this->game;
     }
 
 
@@ -47,7 +47,7 @@ abstract class LimTask extends Task
      * @param int $delay
      * @return LimTask
      */
-    public abstract function Start(int $period, int $delay = 0): self;
+    public abstract function start(int $period, int $delay = 0): self;
 
 
 

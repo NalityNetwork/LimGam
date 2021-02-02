@@ -19,7 +19,7 @@ class GameUpdater extends LimTask
 
 
     /** @var int */
-    protected $ChunkID;
+    protected $chunkID;
 
 
 
@@ -31,7 +31,7 @@ class GameUpdater extends LimTask
     {
         parent::__construct($game);
 
-        $this->ChunkID = $chunkID;
+        $this->chunkID = $chunkID;
     }
 
 
@@ -39,7 +39,7 @@ class GameUpdater extends LimTask
     /**
      * @inheritDoc
      */
-    public function Start(int $period = 20, int $delay = 0): LimTask
+    public function start(int $period = 20, int $delay = 0): LimTask
     {
         LimGam::GetInstance()->getScheduler()->scheduleRepeatingTask($this, $period);
         return $this;
@@ -53,18 +53,18 @@ class GameUpdater extends LimTask
     public function onRun(int $currentTick)
     {
 
-        if (count($this->Game) < (5 * $this->ChunkID))
+        if (count($this->game) < (5 * $this->chunkID))
         {
-            $this->Game->RemoveTask($this->getTaskId());
+            $this->game->removeTask($this->getTaskId());
             return;
         }
 
-        $arenas = array_values($this->Game->GetArenas());
+        $arenas = array_values($this->game->getArenas());
 
-        for ($i = $this->ChunkID + 4; $i >= $this->ChunkID; --$i)
+        for ($i = $this->chunkID + 4; $i >= $this->chunkID; --$i)
         {
             if (isset($arenas[$i]))
-                $arenas[$i]->Update($currentTick);
+                $arenas[$i]->update($currentTick);
         }
     }
 
@@ -72,8 +72,8 @@ class GameUpdater extends LimTask
 
     public function __destruct()
     {
-        if ($this->getHandler() && $this->Game)
-            $this->Game->RemoveTask($this->getTaskId());
+        if ($this->getHandler() && $this->game)
+            $this->game->removeTask($this->getTaskId());
     }
 
 

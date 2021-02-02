@@ -18,34 +18,34 @@ class Team
 {
 
     /** @var string */
-    protected $Name;
+    protected $name;
 
     /** @var string */
-    protected $Color;
+    protected $color;
 
     /** @var bool */
-    protected $IsExternal;
+    protected $isExternal;
 
     /** @var int */
-    protected $Size;
+    protected $size;
 
     /** @var string */
-    protected $ArenaID;
+    protected $arenaID;
 
     /** @var int */
-    protected $Alive = 0;
+    protected $alive = 0;
 
     /** @var int */
-    protected $Spectators = 0;
+    protected $spectators = 0;
 
     /** @var int */
-    protected $Busy = 0;
+    protected $busy = 0;
 
     /** @var InGame[] */
-    protected $Members = [];
+    protected $members = [];
 
     /** @var string[] */
-    protected $Reservations = [];
+    protected $reservations = [];
 
 
 
@@ -54,18 +54,18 @@ class Team
      * @param string $color
      * @param bool   $external
      * @param int    $size
-     * @param string $ArenaID
+     * @param string $arenaID
      */
-    public function __construct(string $name, string $color, bool $external, int $size, string $ArenaID = "")
+    public function __construct(string $name, string $color, bool $external, int $size, string $arenaID = "")
     {
         if ($size < 1)
             throw new InvalidArgumentException("Team size must be greater than zero.");
 
-        $this->Name       = $name;
-        $this->Color      = $color;
-        $this->IsExternal = $external;
-        $this->Size       = $size;
-        $this->ArenaID    = $ArenaID;
+        $this->name       = $name;
+        $this->color      = $color;
+        $this->isExternal = $external;
+        $this->size       = $size;
+        $this->arenaID    = $arenaID;
     }
 
 
@@ -73,9 +73,9 @@ class Team
     /**
      * @return string
      */
-    public function GetName(): string
+    public function getName(): string
     {
-        return $this->Name;
+        return $this->name;
     }
 
 
@@ -83,9 +83,9 @@ class Team
     /**
      * @return string
      */
-    public function GetColor(): string
+    public function getColor(): string
     {
-        return $this->Color;
+        return $this->color;
     }
 
 
@@ -93,9 +93,9 @@ class Team
     /**
      * @return bool
      */
-    public function IsExternal(): bool
+    public function isExternal(): bool
     {
-        return $this->IsExternal;
+        return $this->isExternal;
     }
 
 
@@ -103,9 +103,9 @@ class Team
     /**
      * @return int
      */
-    public function GetSize(): int
+    public function getSize(): int
     {
-        return $this->Size;
+        return $this->size;
     }
 
 
@@ -113,9 +113,9 @@ class Team
     /**
      * @return string
      */
-    public function GetArenaID(): string
+    public function getArenaID(): string
     {
-        return $this->ArenaID;
+        return $this->arenaID;
     }
 
 
@@ -124,12 +124,12 @@ class Team
      * @param bool $includeReservations
      * @return int
      */
-    public function Count(bool $includeReservations = false): int
+    public function count(bool $includeReservations = false): int
     {
         if ($includeReservations)
-            return count($this->Members) + count($this->Reservations);
+            return count($this->members) + count($this->reservations);
 
-        return count($this->Members);
+        return count($this->members);
     }
 
 
@@ -137,28 +137,28 @@ class Team
     /**
      * @return int
      */
-    public function GetFreeSlots(): int
+    public function getFreeSlots(): int
     {
-        return ($this->Size - $this->Count(true));
+        return ($this->size - $this->count(true));
     }
 
 
-    public function UpdateStatus(): void
+    public function updateStatus(): void
     {
-        $this->Alive      = 0;
-        $this->Spectators = 0;
-        $this->Busy       = 0;
+        $this->alive      = 0;
+        $this->spectators = 0;
+        $this->busy       = 0;
 
-        foreach ($this->Members as $member)
+        foreach ($this->members as $member)
         {
-            if ($member->IsAlive())
-                $this->Alive++;
+            if ($member->isAlive())
+                $this->alive++;
 
-            if ($member->IsSpectating())
-                $this->Spectators++;
+            if ($member->isSpectating())
+                $this->spectators++;
 
-            if ($member->IsBusy())
-                $this->Busy++;
+            if ($member->isBusy())
+                $this->busy++;
         }
     }
 
@@ -168,9 +168,9 @@ class Team
      * @param string $player
      * @return bool
      */
-    public function IsMember(string $player): bool
+    public function isMember(string $player): bool
     {
-        return isset($this->Members[$player]);
+        return isset($this->members[$player]);
     }
 
 
@@ -180,35 +180,35 @@ class Team
      * @param InGame $session
      * @return bool
      */
-    public function AddMember(InGame $session): bool //Member is not a member yet
+    public function addMember(InGame $session): bool //Member is not a member yet
     {
 
-        if ($session->GetArena())
+        if ($session->getArena())
         {
-            if ($session->GetArena()->GetID() !== $this->ArenaID)
+            if ($session->getArena()->getID() !== $this->arenaID)
                 throw new InvalidArgumentException("");
 
-            if (isset($this->Members[$session->GetName()]) || $session->GetTeam())
+            if (isset($this->members[$session->getName()]) || $session->getTeam())
                 return false;
 
-            $sname = $session->GetName();
+            $sname = $session->getName();
 
-            if (!$this->IsExternal)
+            if (!$this->isExternal)
             {
-                if ($this->IsFull() && !isset($this->Reservations[$sname]))
+                if ($this->isFull() && !isset($this->reservations[$sname]))
                     return false;
 
-                unset($this->Reservations[$sname]);
+                unset($this->reservations[$sname]);
             }
 
             /** @var Team $team */
-            foreach ($session->GetArena()->GetTeams() as $team)
-                $team->RemoveReservation($sname);
+            foreach ($session->getArena()->getTeams() as $team)
+                $team->removeReservation($sname);
 
-            $this->Members[$sname] = $session;
-            $this->Members[$sname]->SetTeam($this);
+            $this->members[$sname] = $session;
+            $this->members[$sname]->setTeam($this);
 
-            $this->UpdateStatus();
+            $this->updateStatus();
 
             return true;
         }
@@ -222,9 +222,9 @@ class Team
     /**
      * @param string $player
      */
-    public function RemoveMember(string $player): void
+    public function removeMember(string $player): void
     {
-        unset($this->Members[$player]);
+        unset($this->members[$player]);
     }
 
 
@@ -232,9 +232,9 @@ class Team
     /**
      * @return array|InGame[]
      */
-    public function GetMembers(): array
+    public function getMembers(): array
     {
-        return $this->Members;
+        return $this->members;
     }
 
 
@@ -243,14 +243,14 @@ class Team
      * @param string $message
      * @param int    $status
      */
-    public function Message(string $message, int $status = InGame::STATUS_ALIVE): void
+    public function message(string $message, int $status = InGame::STATUS_ALIVE): void
     {
-        foreach ($this->Members as $session)
+        foreach ($this->members as $session)
         {
-            if ($session->GetStatus() !== $status)
+            if ($session->getStatus() !== $status)
                 continue;
 
-            $session->GetPlayer()->sendMessage($message);
+            $session->getPlayer()->sendMessage($message);
         }
     }
 
@@ -260,14 +260,14 @@ class Team
      * @param string $message
      * @param int    $status
      */
-    public function Tip(string $message, int $status = InGame::STATUS_ALIVE): void
+    public function tip(string $message, int $status = InGame::STATUS_ALIVE): void
     {
-        foreach ($this->Members as $session)
+        foreach ($this->members as $session)
         {
-            if ($session->GetStatus() !== $status)
+            if ($session->getStatus() !== $status)
                 continue;
 
-            $session->GetPlayer()->sendTip($message);
+            $session->getPlayer()->sendTip($message);
         }
     }
 
@@ -278,25 +278,25 @@ class Team
      * @param string $subtitle
      * @param int    $status
      */
-    public function Popup(string $message, string $subtitle = "", int $status = InGame::STATUS_ALIVE): void
+    public function popup(string $message, string $subtitle = "", int $status = InGame::STATUS_ALIVE): void
     {
-        foreach ($this->Members as $session)
+        foreach ($this->members as $session)
         {
-            if ($session->GetStatus() !== $status)
+            if ($session->getStatus() !== $status)
                 continue;
 
-            $session->GetPlayer()->sendPopup($message, $subtitle);
+            $session->getPlayer()->sendPopup($message, $subtitle);
         }
     }
 
 
 
-    public function CleanUp(): void
+    public function cleanUp(): void
     {
-        foreach ($this->Members as $session)
-            LimGam::GetGameManager()->RemoveSession($session->GetName());
+        foreach ($this->members as $session)
+            LimGam::GetGameManager()->removeSession($session->getName());
 
-        $this->Reservations = [];
+        $this->reservations = [];
     }
 
 
@@ -305,12 +305,12 @@ class Team
      * Return how many players are alive in the team
      * @return int
      */
-    public function CountInGame(): int
+    public function countInGame(): int
     {
-        if ($this->IsExternal)
+        if ($this->isExternal)
             return 0;
 
-        return $this->Alive;
+        return $this->alive;
     }
 
 
@@ -318,9 +318,9 @@ class Team
     /**
      * @return bool
      */
-    public function IsFull(): bool
+    public function isFull(): bool
     {
-        return ($this->Count(true) === $this->Size);
+        return ($this->count(true) === $this->size);
     }
 
 
@@ -328,9 +328,9 @@ class Team
     /**
      * @return bool
      */
-    public function IsSolo(): bool
+    public function isSolo(): bool
     {
-        return ($this->Size === 1);
+        return ($this->size === 1);
     }
 
 
@@ -338,9 +338,9 @@ class Team
     /**
      * @return bool
      */
-    public function IsEmpty(): bool
+    public function isEmpty(): bool
     {
-        return ($this->Members === []);
+        return ($this->members === []);
     }
 
 
@@ -349,9 +349,9 @@ class Team
      * @param int $count
      * @return bool
      */
-    public function CanReserveSpace(int $count): bool
+    public function canReserveSpace(int $count): bool
     {
-        if ($this->GetFreeSlots() < $count)
+        if ($this->getFreeSlots() < $count)
             return false;
 
         return true;
@@ -363,12 +363,12 @@ class Team
      * @param string $player
      * @return bool
      */
-    public function AddReservation(string $player): bool
+    public function addReservation(string $player): bool
     {
-        if (!$this->GetFreeSlots() || $this->IsMember($player))
+        if (!$this->getFreeSlots() || $this->isMember($player))
             return false;
 
-        $this->Reservations[$player] = time();
+        $this->reservations[$player] = time();
         return true;
     }
 
@@ -377,9 +377,9 @@ class Team
     /**
      * @return array|string[]
      */
-    public function GetReservations(): array
+    public function getReservations(): array
     {
-        return $this->Reservations;
+        return $this->reservations;
     }
 
 
@@ -388,9 +388,9 @@ class Team
      * @param string $player
      * @return bool
      */
-    public function HasReservation(string $player): bool
+    public function hasReservation(string $player): bool
     {
-        return isset($this->Reservations[$player]);
+        return isset($this->reservations[$player]);
     }
 
 
@@ -398,18 +398,18 @@ class Team
     /**
      * @param string ...$players
      */
-    public function RemoveReservation(string...$players): void
+    public function removeReservation(string...$players): void
     {
         foreach ($players as $player)
-            unset($this->Reservations[$player]);
+            unset($this->reservations[$player]);
     }
 
 
 
     public function __destruct()
     {
-        foreach ($this->Members as $member)
-            $this->RemoveMember($member->GetName());
+        foreach ($this->members as $member)
+            $this->removeMember($member->getName());
     }
 
 

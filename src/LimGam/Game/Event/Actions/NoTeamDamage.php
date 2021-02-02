@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpUnused */
+<?php
 declare(strict_types = 1);
 
 namespace LimGam\Game\Event\Actions;
@@ -36,14 +36,14 @@ class NoTeamDamage extends EventAction
     /**
      * @inheritDoc
      */
-    public function Process(Event $event, $result)
+    public function process(Event $event, $result)
     {
         if ($event->isCancelled() || !($result instanceof InGame) || !($event instanceof EntityDamageByEntityEvent) && !($event instanceof EntityDamageByChildEntityEvent))
             return;
 
         $attacker = ($event instanceof EntityDamageByEntityEvent) ? $event->getDamager() : $event->getChild()->getOwningEntity();
 
-        if (($attacker instanceof Player) && $result->GetTeam()->IsMember($attacker->getName()))
+        if (($attacker instanceof Player) && $result->getTeam()->isMember($attacker->getName()))
             $event->setCancelled();
     }
 
@@ -52,7 +52,7 @@ class NoTeamDamage extends EventAction
     /**
      * @inheritDoc
      */
-    public function GetName(): string
+    public function getName(): string
     {
         return "NoTeamDamage";
     }
@@ -62,7 +62,7 @@ class NoTeamDamage extends EventAction
     /**
      * @inheritDoc
      */
-    public function GetEvent(): string
+    public function getEvent(): string
     {
         return EntityDamageEvent::class;
     }

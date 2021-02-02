@@ -20,26 +20,26 @@ class GameManager
 
 
     /** @var Game[] */
-    protected $Games;
+    protected $games;
 
     /** @var InGame[] */
-    protected $Sessions;
+    protected $sessions;
 
     /** @var MapManager */
-    protected $MapManager;
+    protected $mapManager;
 
     /** @var string */
-    protected $SessionClass;
+    protected $sessionClass;
 
 
 
     /** Constructor */
     public function __construct()
     {
-        $this->Games        = [];
-        $this->Sessions     = [];
-        $this->MapManager   = new MapManager();
-        $this->SessionClass = InGame::class;
+        $this->games        = [];
+        $this->sessions     = [];
+        $this->mapManager   = new MapManager();
+        $this->sessionClass = InGame::class;
     }
 
 
@@ -47,12 +47,12 @@ class GameManager
     /**
      * @param string $class
      */
-    public function SetSessionClass(string $class): void
+    public function setSessionClass(string $class): void
     {
-        if (!is_a($class, InGame::class, true) || count($this->Sessions))
+        if (!is_a($class, InGame::class, true) || count($this->sessions))
             return;
 
-        $this->SessionClass = $class;
+        $this->sessionClass = $class;
     }
 
 
@@ -60,12 +60,12 @@ class GameManager
     /**
      * @param Player $player
      */
-    public function AddSession(Player $player): void
+    public function addSession(Player $player): void
     {
-        if (isset($this->Sessions[$player->getName()]))
+        if (isset($this->sessions[$player->getName()]))
             return;
 
-        $this->Sessions[$player->getName()] = new $this->SessionClass($player);
+        $this->sessions[$player->getName()] = new $this->sessionClass($player);
     }
 
 
@@ -73,12 +73,12 @@ class GameManager
     /**
      * @param string $name
      */
-    public function RemoveSession(string $name): void
+    public function removeSession(string $name): void
     {
-        if (isset($this->Sessions[$name]))
+        if (isset($this->sessions[$name]))
         {
-            $this->Sessions[$name]->Close();
-            unset($this->Sessions[$name]);
+            $this->sessions[$name]->close();
+            unset($this->sessions[$name]);
         }
     }
 
@@ -88,17 +88,17 @@ class GameManager
      * @param string|Player $player
      * @return InGame|null
      */
-    public function GetSession($player): ?InGame
+    public function getSession($player): ?InGame
     {
         if ($player instanceof Player)
         {
-            if (!isset($this->Sessions[$player->getName()]))
-                $this->Sessions[$player->getName()] = new InGame($player);
+            if (!isset($this->sessions[$player->getName()]))
+                $this->sessions[$player->getName()] = new InGame($player);
 
             $player = $player->getName();
         }
 
-        return ($this->Sessions[(string) $player] ?? null);
+        return ($this->sessions[(string) $player] ?? null);
     }
 
 
@@ -106,9 +106,9 @@ class GameManager
     /**
      * @return MapManager
      */
-    public function GetMapManager(): MapManager
+    public function getMapManager(): MapManager
     {
-        return $this->MapManager;
+        return $this->mapManager;
     }
 
 
@@ -118,15 +118,15 @@ class GameManager
      * @param Arena  ...$arenas
      * @throws Exception
      */
-    public function AddGame(string $game, Arena...$arenas)
+    public function addGame(string $game, Arena...$arenas)
     {
-        if (isset($this->Games[$game]))
+        if (isset($this->games[$game]))
             throw new Exception("Cannot add twice a game.");
 
-        $this->Games[$game] = new Game($game);
+        $this->games[$game] = new Game($game);
 
         foreach ($arenas as $arena)
-            $this->Games[$game]->AddArena($arena);
+            $this->games[$game]->addArena($arena);
     }
 
 
@@ -135,9 +135,9 @@ class GameManager
      * @param string $name
      * @return Game|null
      */
-    public function GetGame(string $name): ?Game
+    public function getGame(string $name): ?Game
     {
-        return ($this->Games[$name] ?? null);
+        return ($this->games[$name] ?? null);
     }
 
 
@@ -146,11 +146,11 @@ class GameManager
      * @param string $arenaID
      * @return Arena|null
      */
-    public function GetArenaByID(string $arenaID): ?Arena
+    public function getArenaByID(string $arenaID): ?Arena
     {
-        foreach ($this->Games as $game)
+        foreach ($this->games as $game)
         {
-            if (($found = $game->GetArena($arenaID)))
+            if (($found = $game->getArena($arenaID)))
                 return $found;
         }
 
@@ -161,16 +161,16 @@ class GameManager
 
     public function __destruct()
     {
-        foreach ($this->Games as $game)
+        foreach ($this->games as $game)
         {
-            foreach ($game->GetArenas() as $arena)
-                $arena->Close();
+            foreach ($game->getArenas() as $arena)
+                $arena->close();
         }
 
-        foreach (array_keys($this->Sessions) as $id)
-            unset($this->Sessions[$id]); //sessions = []
+        foreach (array_keys($this->sessions) as $id)
+            unset($this->sessions[$id]); //sessions = []
 
-        $this->MapManager = null;
+        $this->mapManager = null;
     }
 
 

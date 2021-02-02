@@ -16,10 +16,10 @@ abstract class EventAction
 
 
     /** @var int */
-    protected $Priority;
+    protected $priority;
 
     /** @var string */
-    protected $Game;
+    protected $game;
 
 
 
@@ -28,7 +28,7 @@ abstract class EventAction
      */
     public function __construct(int $priority = IGamEvent::PRIORITY_NORMAL)
     {
-        $this->Priority = $priority;
+        $this->priority = $priority;
     }
 
 
@@ -36,9 +36,9 @@ abstract class EventAction
     /**
      * @return int
      */
-    public function GetPriority(): int
+    public function getPriority(): int
     {
-        return $this->Priority;
+        return $this->priority;
     }
 
 
@@ -46,9 +46,9 @@ abstract class EventAction
     /**
      * @param string $game
      */
-    public function SetGame(string $game): void
+    public function setGame(string $game): void
     {
-        $this->Game = $game;
+        $this->game = $game;
     }
 
 
@@ -58,21 +58,21 @@ abstract class EventAction
      * @param       $result
      * @return mixed
      */
-    public abstract function Process(Event $event, $result);
+    public abstract function process(Event $event, $result);
 
 
 
     /**
      * @return string
      */
-    public abstract function GetName(): string;
+    public abstract function getName(): string;
 
 
 
     /**
      * @return string
      */
-    public abstract function GetEvent(): string;
+    public abstract function getEvent(): string;
 
 
 

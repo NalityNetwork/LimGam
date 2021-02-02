@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpUnused */
+<?php
 declare(strict_types = 1);
 
 namespace LimGam\Game\Event\Actions;
@@ -24,15 +24,15 @@ class QuitWhenDie extends EventAction
     /**
      * @inheritDoc
      */
-    public function Process(Event $event, $result)
+    public function process(Event $event, $result)
     {
         /** @var PlayerDeathEvent $event */
         if (!($result instanceof InGame))
-            $result = LimGam::GetGameManager()->GetSession($event->getPlayer()->getName());
+            $result = LimGam::GetGameManager()->getSession($event->getPlayer()->getName());
 
         if ($result)
-            if ($result->GetArena()->GetStatus(Arena::STATUS_RUNNING))
-                LimGam::GetGameManager()->RemoveSession($result->GetName());
+            if ($result->getArena()->getStatus(Arena::STATUS_RUNNING))
+                LimGam::GetGameManager()->removeSession($result->getName());
     }
 
 
@@ -40,7 +40,7 @@ class QuitWhenDie extends EventAction
     /**
      * @inheritDoc
      */
-    public function GetName(): string
+    public function getName(): string
     {
         return "QuitWhenDie";
     }
@@ -50,7 +50,7 @@ class QuitWhenDie extends EventAction
     /**
      * @inheritDoc
      */
-    public function GetEvent(): string
+    public function getEvent(): string
     {
         return PlayerDeathEvent::class;
     }

@@ -22,13 +22,13 @@ class SimpleMcRegion extends McRegion
 
 
     /** @var null|string */
-    protected $Name;
+    protected $name;
 
     /** @var resource */
     protected $ZipResource;
 
     /** @var array */
-    protected $ZipEntries = [];
+    protected $zipEntries = [];
 
 
 
@@ -50,23 +50,23 @@ class SimpleMcRegion extends McRegion
         $zip->close();
 
         $this->path        = $path;
-        $this->ZipResource = zip_open($path);
+        $this->zipResource = zip_open($path);
 
-        while(is_resource($entry = zip_read($this->ZipResource))) {
+        while(is_resource($entry = zip_read($this->zipResource))) {
 
             if (preg_match('#region/#', ($name = zip_entry_name($entry))) !== 1) {
                 if (basename($name) !== 'level.dat') {
                     zip_entry_close($entry);
                     continue;
                 }
-                $this->ZipEntries['level'] = $entry;
+                $this->zipEntries['level'] = $entry;
                 continue;
             }
             [$r, $x, $z, $ext] = explode('.', substr($name, 8)); //TODO: mejorar
-            $this->ZipEntries[$x . '.' . $z] = $entry;
+            $this->zipEntries[$x . '.' . $z] = $entry;
         }
 
-        if (!isset($this->ZipEntries['level']))
+        if (!isset($this->zipEntries['level']))
             throw new Exception("level.dat was not found in " . $this->path);
 
         $this->loadLevelData();
@@ -79,10 +79,10 @@ class SimpleMcRegion extends McRegion
      * @param string $name
      * @return $this
      */
-    public function Name(string $name): self
+    public function name(string $name): self
     {
-        if ($this->Name === null)
-            $this->Name = $name; //setString
+        if ($this->name === null)
+            $this->name = $name; //setString
 
         return $this;
     }
@@ -94,7 +94,7 @@ class SimpleMcRegion extends McRegion
      */
     public function getName(): string
     {
-        return ($this->Name ?? $this->levelData->getString("name"));
+        return ($this->name ?? $this->levelData->getString("name"));
     }
 
 
@@ -104,7 +104,7 @@ class SimpleMcRegion extends McRegion
      */
     protected function loadLevelData(): void
     {
-        $entry = $this->ZipEntries['level'] ?? null;
+        $entry = $this->zipEntries['level'] ?? null;
         $nbt   = new BigEndianNBTStream();
         $data  = $nbt->readCompressed(zip_entry_read($entry, zip_entry_filesize($entry)));
 
@@ -134,11 +134,11 @@ class SimpleMcRegion extends McRegion
 
         try
         {
-            $entry = $this->ZipEntries[$regionX . '.' . $regionZ] ?? null;
+            $entry = $this->zipEntries[$regionX . '.' . $regionZ] ?? null;
 
             if ($entry) {
                 $valid = true;
-                $region->OpenRegion(zip_entry_read($entry, zip_entry_filesize($entry)));
+                $region->openRegion(zip_entry_read($entry, zip_entry_filesize($entry)));
             }
 
             if (!$valid)
@@ -148,7 +148,7 @@ class SimpleMcRegion extends McRegion
         catch (Exception $e)
         {
             $region = new SimpleRegionLoader($regionX, $regionZ);
-            $region->OpenRegion();
+            $region->openRegion();
         }
 
         $this->regions[$index] = $region;
@@ -201,10 +201,10 @@ class SimpleMcRegion extends McRegion
 
     public function __destruct()
     {
-        foreach ($this->ZipEntries as $entry) {
+        foreach ($this->zipEntries as $entry) {
             @zip_entry_close($entry);
         }
-        @zip_close($this->ZipResource);
+        @zip_close($this->zipResource);
     }
 
 

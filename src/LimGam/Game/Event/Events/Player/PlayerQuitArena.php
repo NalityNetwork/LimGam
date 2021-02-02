@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpUnused */
+<?php
 declare(strict_types = 1);
 
 namespace LimGam\Game\Event\Events\Player;
@@ -18,10 +18,10 @@ class PlayerQuitArena extends Event
 
 
     /** @var InGame */
-    protected $Session;
+    protected $session;
 
     /** @var string */
-    protected $Reason;
+    protected $reason;
 
 
 
@@ -31,8 +31,8 @@ class PlayerQuitArena extends Event
      */
     public function __construct(InGame $session, string $reason = "Unknown")
     {
-        $this->Session = $session;
-        $this->Reason  = $reason;
+        $this->session = $session;
+        $this->reason  = $reason;
     }
 
 
@@ -40,9 +40,9 @@ class PlayerQuitArena extends Event
     /**
      * @return InGame
      */
-    public function GetSession(): InGame
+    public function getSession(): InGame
     {
-        return $this->Session;
+        return $this->session;
     }
 
 
@@ -50,9 +50,9 @@ class PlayerQuitArena extends Event
     /**
      * @return string
      */
-    public function GetReason(): string
+    public function getReason(): string
     {
-        return $this->Reason;
+        return $this->reason;
     }
 
 

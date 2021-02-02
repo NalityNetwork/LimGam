@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpUnused */
+<?php
 declare(strict_types = 1);
 
 namespace LimGam\Game\Event\Events\Player;
@@ -18,7 +18,7 @@ class PlayerJoinArena extends Event
 
 
     /** @var InGame */
-    protected $Session;
+    protected $session;
 
 
 
@@ -27,7 +27,7 @@ class PlayerJoinArena extends Event
      */
     public function __construct(InGame $session)
     {
-        $this->Session = $session;
+        $this->session = $session;
     }
 
 
@@ -35,9 +35,9 @@ class PlayerJoinArena extends Event
     /**
      * @return InGame
      */
-    public function GetSession(): InGame
+    public function getSession(): InGame
     {
-        return $this->Session;
+        return $this->session;
     }
 
 

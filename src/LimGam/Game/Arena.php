@@ -24,73 +24,73 @@ abstract class Arena
 
 
     /** @var string */
-    protected $ArenaID;
+    protected $arenaID;
 
     /** @var Game */
-    protected $Game;
+    protected $game;
 
     /** @var array */
-    protected $Config;
+    protected $config;
 
     /** @var int */
-    protected $Status;
+    protected $status;
 
     /** Team[] */
-    protected $Teams;
+    protected $teams;
 
     /** @var bool */
-    protected $Joinable;
+    protected $joinable;
 
     /** @var string */
-    protected $TeamClass;
+    protected $teamClass;
 
     /** @var int */
-    protected $Timeout;
+    protected $timeout;
 
     /** @var int */
-    protected $CountdownToStart;
+    protected $countdownToStart;
 
     /** @var int */
-    protected $CountdownArenaFull;
+    protected $countdownArenaFull;
 
     /** @var int */
-    protected $CountdownToReset;
+    protected $countdownToReset;
 
     /** @var bool */
-    protected $AutoMapReset;
+    protected $autoMapReset;
 
     /** @var int */
-    protected $PlayersCountToStart;
+    protected $playersCountToStart;
 
     /** @var int */
-    protected $TeamSize;
+    protected $teamSize;
 
     /** @var int */
-    protected $TeamsLimit;
+    protected $teamsLimit;
 
     /** @var int */
-    protected $MaxPlayersInArena;
+    protected $maxPlayersInArena;
 
     /** @var bool */
-    protected $SoloMode;
+    protected $soloMode;
 
     /** @var Team|null */
-    protected $Winner;
+    protected $winner;
 
     /** @var int */
-    protected $Countdown;
+    protected $countdown;
 
     /** @var Map */
-    protected $Map;
+    protected $map;
 
     /** @var int */
-    protected $LastEvent;
+    protected $lastEvent;
 
     /** @var bool */
-    protected $Closed = false;
+    protected $closed = false;
 
     /** @var int */
-    protected static $ArenaCounter = 0;
+    protected static $arenaCounter = 0;
 
 
     ####################################################
@@ -147,29 +147,29 @@ abstract class Arena
 
         self::CheckConfig($config);
 
-        $this->ArenaID             = $arenaID;
-        $this->Game                = $game;
-        $this->Status              = Arena::STATUS_RESETTING;
-        $this->Config              = $config;
-        $this->Teams               = [];
-        $this->Joinable            = false;
-        $this->TeamClass           = $teamClass;
-        $this->Timeout             = $config["Timeout"];
-        $this->CountdownToStart    = $config["CountdownToStart"];
-        $this->CountdownArenaFull  = $config["CountdownArenaFull"];
-        $this->CountdownToReset    = $config["CountdownToReset"];
-        $this->AutoMapReset        = true;//$config["AutoMapReset"];
-        $this->PlayersCountToStart = $config["PlayersCountToStart"];
-        $this->TeamSize            = $config["TeamSize"];
-        $this->SoloMode            = ($this->TeamSize === 1);
+        $this->arenaID             = $arenaID;
+        $this->game                = $game;
+        $this->status              = Arena::STATUS_RESETTING;
+        $this->config              = $config;
+        $this->teams               = [];
+        $this->joinable            = false;
+        $this->teamClass           = $teamClass;
+        $this->timeout             = $config["Timeout"];
+        $this->countdownToStart    = $config["CountdownToStart"];
+        $this->countdownArenaFull  = $config["CountdownArenaFull"];
+        $this->countdownToReset    = $config["CountdownToReset"];
+        $this->autoMapReset        = true;//$config["AutoMapReset"];
+        $this->playersCountToStart = $config["PlayersCountToStart"];
+        $this->teamSize            = $config["TeamSize"];
+        $this->soloMode            = ($this->teamSize === 1);
 
 
         foreach ($config["Teams"] as $name => $team)
         {
             try
             {
-                $this->TeamsLimit++;
-                $this->AddTeam(new $this->TeamClass((string) $name, $team[0], $team[1], $this->TeamSize, $this->ArenaID));
+                $this->teamsLimit++;
+                $this->addTeam(new $this->teamClass((string) $name, $team[0], $team[1], $this->teamSize, $this->arenaID));
             }
             catch (Throwable $e)
             {
@@ -178,9 +178,9 @@ abstract class Arena
             }
         }
 
-        $this->MaxPlayersInArena = ($this->TeamsLimit * $this->TeamSize);
+        $this->maxPlayersInArena = ($this->teamsLimit * $this->teamSize);
 
-        $this->Reset();
+        $this->reset();
     }
 
 
@@ -189,7 +189,7 @@ abstract class Arena
      * @param array $config
      * @throws Exception
      */
-    public static function CheckConfig(array $config): void
+    public static function checkConfig(array $config): void
     {
         foreach (static::CONFIG as $i => $value)
         {
@@ -221,25 +221,25 @@ abstract class Arena
      * @return bool
      * @throws Exception
      */
-    public function Reset(): bool
+    public function reset(): bool
     {
 
-        if ($this->Status !== static::STATUS_RESETTING)
+        if ($this->status !== static::STATUS_RESETTING)
             return false;
 
-        foreach ($this->Teams as $team)
-            $team->CleanUp();
+        foreach ($this->teams as $team)
+            $team->cleanUp();
 
-        if ($this->AutoMapReset)
-            $this->Map = null;
+        if ($this->autoMapReset)
+            $this->map = null;
 
-        $this->Status    = static::STATUS_WAITING;
-        $this->Joinable  = true;
-        $this->Winner    = null;
-        $this->Countdown = $this->CountdownToStart;
-        $this->LastEvent = static::STATUS_HAS_CHANGED;
+        $this->status    = static::STATUS_WAITING;
+        $this->joinable  = true;
+        $this->winner    = null;
+        $this->countdown = $this->countdownToStart;
+        $this->lastEvent = static::STATUS_HAS_CHANGED;
 
-        $this->BroadcastInternalEvent($this->LastEvent);
+        $this->broadcastInternalEvent($this->lastEvent);
         return true;
     }
 
@@ -249,15 +249,15 @@ abstract class Arena
      * @param Map|null $map
      * @throws Exception
      */
-    public function SetMap(Map $map = null): void
+    public function setMap(Map $map = null): void
     {
-        if ($map && $this->Status === Arena::STATUS_RUNNING)
+        if ($map && $this->status === Arena::STATUS_RUNNING)
             throw new Exception("Cannot change map while the arena is running.");
 
-        $this->Map       = $map;
-        $this->LastEvent = Arena::MAP_HAS_BEEN_ADDED;
+        $this->map       = $map;
+        $this->lastEvent = Arena::MAP_HAS_BEEN_ADDED;
 
-        $this->BroadcastInternalEvent($this->LastEvent);
+        $this->broadcastInternalEvent($this->lastEvent);
     }
 
 
@@ -265,9 +265,9 @@ abstract class Arena
     /**
      * @return Map|null
      */
-    public function GetMap(): ?Map
+    public function getMap(): ?Map
     {
-        return $this->Map;
+        return $this->map;
     }
 
 
@@ -277,24 +277,24 @@ abstract class Arena
      * @param bool $forceAdd
      * @throws Exception
      */
-    public function AddTeam(Team $team, bool $forceAdd = false): void
+    public function addTeam(Team $team, bool $forceAdd = false): void
     {
-        if (isset($this->Teams[$team->GetName()]))
+        if (isset($this->teams[$team->getName()]))
             throw new Exception("Cannot add twice a team in the same arena.");
 
-        if (!is_a($team, $this->TeamClass, true))
+        if (!is_a($team, $this->teamClass, true))
             throw new Exception("Team object does not match the arena team class.");
 
-        if (!$team->IsExternal())
+        if (!$team->isExternal())
         {
-            if (count($this->Teams) >= $this->TeamsLimit)
+            if (count($this->teams) >= $this->teamsLimit)
                 throw new Exception("Cannot add more teams, team limit reached.");
 
-            if ($this->GetStatus() === static::STATUS_RUNNING && !$forceAdd)
+            if ($this->getStatus() === static::STATUS_RUNNING && !$forceAdd)
                 throw new Exception("Cannot add teams while match is in progress.");
         }
 
-        $this->Teams[$team->GetName()] = $team;
+        $this->teams[$team->getName()] = $team;
     }
 
 
@@ -303,9 +303,9 @@ abstract class Arena
      * @param string $name
      * @return Team|null
      */
-    public function GetTeam(string $name): ?Team
+    public function getTeam(string $name): ?Team
     {
-        return ($this->Teams[$name] ?? null);
+        return ($this->teams[$name] ?? null);
     }
 
 
@@ -313,10 +313,10 @@ abstract class Arena
     /**
      * @param string $name
      */
-    public function RemoveTeam(string $name): void
+    public function removeTeam(string $name): void
     {
-        if (isset($this->Teams[$name]))
-            unset($this->Teams[$name]);
+        if (isset($this->teams[$name]))
+            unset($this->teams[$name]);
     }
 
 
@@ -326,25 +326,25 @@ abstract class Arena
      * @param string $player
      * @return Team|null
      */
-    public function FindFreeTeam(string $player = "", bool $external = false, array $mates = []): ?Team
+    public function findFreeTeam(string $player = "", bool $external = false, array $mates = []): ?Team
     {
         /** @var Team $team */
-        foreach ($this->Teams as $team)
+        foreach ($this->teams as $team)
         {
-            if ($team->IsExternal() !== $external)
+            if ($team->isExternal() !== $external)
                 continue;
 
             if ($mates === [])
             {
-                if ($player && $team->HasReservation($player))
+                if ($player && $team->hasReservation($player))
                     return $team;
 
-                if ($team->GetFreeSlots())
+                if ($team->getFreeSlots())
                     return $team;
             }
             else
             {
-                if ($team->CanReserveSpace(count($mates) + 1))
+                if ($team->canReserveSpace(count($mates) + 1))
                     return $team;
             }
 
@@ -360,24 +360,24 @@ abstract class Arena
      * @param Team|null $team
      * @return bool
      */
-    public function AddSpectator(InGame $session, Team $team = null): bool
+    public function addSpectator(InGame $session, Team $team = null): bool
     {
         if (!$team)
         {
-            $team = $this->FindFreeTeam($session->getName(), true);
+            $team = $this->findFreeTeam($session->getName(), true);
 
             if ($team)
-                $team->AddReservation($session->getName());
+                $team->addReservation($session->getName());
         }
 
         if (!$team)
             return false;
 
-        if ($this->GetTeam($team->GetName()) === null)
+        if ($this->getTeam($team->getName()) === null)
         {
             try
             {
-                $this->AddTeam($team);
+                $this->addTeam($team);
             }
             catch (Throwable $e)
             {
@@ -385,7 +385,7 @@ abstract class Arena
             }
         }
 
-        return $team->AddMember($session);
+        return $team->addMember($session);
     }
 
 
@@ -393,15 +393,15 @@ abstract class Arena
     /**
      * @return int
      */
-    public function GetFreeSlots(): int
+    public function getFreeSlots(): int
     {
-        if (!$this->Joinable)
+        if (!$this->joinable)
             return 0;
         
         $slots = 0;
 
-        foreach ($this->Teams as $team)
-            $slots += $team->GetFreeSlots();
+        foreach ($this->teams as $team)
+            $slots += $team->getFreeSlots();
 
         return $slots;
     }
@@ -411,9 +411,9 @@ abstract class Arena
     /**
      * @return array
      */
-    public function GetTeams(): array
+    public function getTeams(): array
     {
-        return $this->Teams;
+        return $this->teams;
     }
 
 
@@ -421,9 +421,9 @@ abstract class Arena
     /**
      * @return bool
      */
-    public function IsJoinable(): bool
+    public function isJoinable(): bool
     {
-        return $this->Joinable;
+        return $this->joinable;
     }
 
 
@@ -431,9 +431,9 @@ abstract class Arena
     /**
      * @return Team|null
      */
-    public function GetWinner(): ?Team
+    public function getWinner(): ?Team
     {
-        return $this->Winner;
+        return $this->winner;
     }
 
 
@@ -442,16 +442,16 @@ abstract class Arena
      * @param bool $includeExternal
      * @return InGame[]
      */
-    public function GetSessions(bool $includeExternal): array
+    public function getSessions(bool $includeExternal): array
     {
         $sessions = [];
 
-        foreach ($this->Teams as $team)
+        foreach ($this->teams as $team)
         {
-            if ($team->IsExternal() && !$includeExternal)
+            if ($team->isExternal() && !$includeExternal)
                 continue;
 
-            $sessions += $team->GetMembers();
+            $sessions += $team->getMembers();
         }
 
         return $sessions;
@@ -462,9 +462,9 @@ abstract class Arena
     /**
      * @return string
      */
-    public static function GenerateRandomID(): string
+    public static function generateRandomID(): string
     {
-        return (str_shuffle("ABC") . static::$ArenaCounter++);
+        return (str_shuffle("ABC") . static::$arenaCounter++);
     }
 
 
@@ -472,9 +472,9 @@ abstract class Arena
     /**
      * @return string
      */
-    public function GetID(): string
+    public function getID(): string
     {
-        return $this->ArenaID;
+        return $this->arenaID;
     }
 
 
@@ -482,9 +482,9 @@ abstract class Arena
     /**
      * @return Game
      */
-    public function GetGame(): Game
+    public function getGame(): Game
     {
-        return $this->Game;
+        return $this->game;
     }
 
 
@@ -492,9 +492,9 @@ abstract class Arena
     /**
      * @return array
      */
-    public function GetConfig(): array
+    public function getConfig(): array
     {
-        return $this->Config;
+        return $this->config;
     }
 
 
@@ -502,9 +502,9 @@ abstract class Arena
     /**
      * @return int
      */
-    public function GetCountdown(): int
+    public function getCountdown(): int
     {
-        return $this->Countdown;
+        return $this->countdown;
     }
 
 
@@ -513,12 +513,12 @@ abstract class Arena
      * @param int|null $status
      * @return int
      */
-    public function GetStatus(int $status = null): int
+    public function getStatus(int $status = null): int
     {
         if ($status)
-            return (int) ((($this->Status & (Arena::STATUS_WAITING | Arena::STATUS_BEGINNING | Arena::STATUS_RUNNING | Arena::STATUS_RESETTING)) & $status) === $status);
+            return (int) ((($this->status & (Arena::STATUS_WAITING | Arena::STATUS_BEGINNING | Arena::STATUS_RUNNING | Arena::STATUS_RESETTING)) & $status) === $status);
 
-        return $this->Status;
+        return $this->status;
     }
 
 
@@ -527,35 +527,35 @@ abstract class Arena
      * @param int $currentTick
      * @throws Exception
      */
-    public function Update(int $currentTick = 0)
+    public function update(int $currentTick = 0)
     {
-        if ($this->Closed)
+        if ($this->closed)
             return;
 
-        if ($this->Countdown < 0)
-            $this->Countdown = 0;
+        if ($this->countdown < 0)
+            $this->countdown = 0;
 
-        if ($this->Status === static::STATUS_WAITING)
+        if ($this->status === static::STATUS_WAITING)
         {
-            $this->StatusWaiting();
-            return;
-        }
-
-        if ($this->Status === static::STATUS_BEGINNING)
-        {
-            $this->StatusBeginning();
+            $this->statusWaiting();
             return;
         }
 
-        if ($this->Status === static::STATUS_RUNNING)
+        if ($this->status === static::STATUS_BEGINNING)
         {
-            $this->StatusRunning();
+            $this->statusBeginning();
             return;
         }
 
-        if ($this->Status === static::STATUS_RESETTING)
+        if ($this->status === static::STATUS_RUNNING)
         {
-            $this->StatusResetting();
+            $this->statusRunning();
+            return;
+        }
+
+        if ($this->status === static::STATUS_RESETTING)
+        {
+            $this->statusResetting();
             return;
         }
     }
@@ -565,12 +565,12 @@ abstract class Arena
     /**
      * @return int
      */
-    public function GetCountInGeneral(): int
+    public function getCountInGeneral(): int
     {
         $count = 0;
 
-        foreach ($this->Teams as $team)
-            $count += $team->CountInGame();
+        foreach ($this->teams as $team)
+            $count += $team->countInGame();
 
         return $count;
     }
@@ -580,12 +580,12 @@ abstract class Arena
     /**
      * @return Team[]
      */
-    public function GetRemainingTeams(): array
+    public function getRemainingTeams(): array
     {
         $list = [];
 
-        foreach ($this->Teams as $team)
-            if ($team->CountInGame())
+        foreach ($this->teams as $team)
+            if ($team->countInGame())
                 $list[] = $team;
 
         return $list;
@@ -597,14 +597,14 @@ abstract class Arena
      * @throws Exception
      * @internal
      */
-    protected function StatusWaiting()
+    protected function statusWaiting()
     {
-        if ($this->GetCountInGeneral() >= $this->PlayersCountToStart)
+        if ($this->getCountInGeneral() >= $this->playersCountToStart)
         {
-            $this->Status    = Arena::STATUS_BEGINNING;
-            $this->LastEvent = Arena::STATUS_HAS_CHANGED;
+            $this->status    = Arena::STATUS_BEGINNING;
+            $this->lastEvent = Arena::STATUS_HAS_CHANGED;
 
-            $this->BroadcastInternalEvent($this->LastEvent);
+            $this->broadcastInternalEvent($this->lastEvent);
         }
     }
 
@@ -614,31 +614,31 @@ abstract class Arena
      * @throws Exception
      * @internal
      */
-    protected function StatusBeginning()
+    protected function statusBeginning()
     {
-        if ($this->GetCountInGeneral() < $this->PlayersCountToStart)
+        if ($this->getCountInGeneral() < $this->playersCountToStart)
         {
-            $this->Status    = static::STATUS_WAITING;
-            $this->Countdown = $this->CountdownToStart;
-            $this->LastEvent = static::STATUS_HAS_CHANGED;
+            $this->status    = static::STATUS_WAITING;
+            $this->countdown = $this->countdownToStart;
+            $this->lastEvent = static::STATUS_HAS_CHANGED;
 
-            $this->BroadcastInternalEvent($this->LastEvent);
+            $this->broadcastInternalEvent($this->lastEvent);
 
             return;
         }
 
-        if ($this->GetCountInGeneral() === $this->MaxPlayersInArena)
+        if ($this->getCountInGeneral() === $this->maxPlayersInArena)
         {
-            if ($this->Countdown > $this->CountdownArenaFull)
-                $this->Countdown = $this->CountdownArenaFull;
+            if ($this->countdown > $this->countdownArenaFull)
+                $this->countdown = $this->countdownArenaFull;
         }
 
-        if ($this->Countdown-- === 0)
+        if ($this->countdown-- === 0)
         {
-            $this->Status    = static::STATUS_RUNNING;
-            $this->LastEvent = static::STATUS_HAS_CHANGED;
+            $this->status    = static::STATUS_RUNNING;
+            $this->lastEvent = static::STATUS_HAS_CHANGED;
 
-            $this->BroadcastInternalEvent($this->LastEvent);
+            $this->broadcastInternalEvent($this->lastEvent);
         }
     }
 
@@ -648,18 +648,18 @@ abstract class Arena
      * @throws Exception
      * @internal
      */
-    protected function StatusRunning()
+    protected function statusRunning()
     {
-        if ($this->Countdown-- === 0)
+        if ($this->countdown-- === 0)
         {
-            $this->Status    = static::STATUS_RESETTING;
-            $this->Countdown = $this->CountdownToReset;
-            $this->LastEvent = static::STATUS_HAS_CHANGED;
+            $this->status    = static::STATUS_RESETTING;
+            $this->countdown = $this->countdownToReset;
+            $this->lastEvent = static::STATUS_HAS_CHANGED;
 
-            $this->BroadcastInternalEvent($this->LastEvent);
+            $this->broadcastInternalEvent($this->lastEvent);
         }
 
-        if ($this->Status === static::STATUS_RESETTING)
+        if ($this->status === static::STATUS_RESETTING)
             (new GameOver($this))->call();
     }
 
@@ -669,10 +669,10 @@ abstract class Arena
      * @throws Exception
      * @internal
      */
-    protected function StatusResetting()
+    protected function statusResetting()
     {
-        if ($this->Countdown-- === 0)
-            $this->Reset();
+        if ($this->countdown-- === 0)
+            $this->reset();
     }
 
 
@@ -683,22 +683,22 @@ abstract class Arena
      * @throws Exception
      * @internal
      */
-    protected function BroadcastInternalEvent(int $event)
+    protected function broadcastInternalEvent(int $event)
     {
         if ($event === static::STATUS_HAS_CHANGED)
         {
-            if ($this->Status === static::STATUS_RUNNING && $this->Map === null)
+            if ($this->status === static::STATUS_RUNNING && $this->map === null)
                 throw new Exception("Cannot start a game without a map.");
 
-            if ($this->Status === static::STATUS_RUNNING)
+            if ($this->status === static::STATUS_RUNNING)
             {
-                $this->Start();
+                $this->start();
                 return true;
             }
 
-            if ($this->Status === static::STATUS_RESETTING)
+            if ($this->status === static::STATUS_RESETTING)
             {
-                $this->End();
+                $this->end();
                 return true;
             }
         }
@@ -711,9 +711,9 @@ abstract class Arena
     /**
      * @internal
      */
-    protected function Start()
+    protected function start()
     {
-        $this->Countdown = $this->Timeout;
+        $this->countdown = $this->timeout;
     }
 
 
@@ -721,7 +721,7 @@ abstract class Arena
     /**
      * @internal
      */
-    protected function End()
+    protected function end()
     {
         //...
     }
@@ -732,36 +732,36 @@ abstract class Arena
      * @param InGame $session
      * @return bool
      */
-    public abstract function ProcessSession(InGame $session): bool;
+    public abstract function processSession(InGame $session): bool;
 
 
 
     /**
      * Logical function to set and get the winner team of the match.
-     * Use this function with "$this->Winner" variable.
+     * Use this function with "$this->winner" variable.
      * @return mixed
      * @internal
      */
-    protected abstract function CheckWinner();
+    protected abstract function checkWinner();
 
 
 
     /**
      * Closes the arena
      */
-    public function Close(): void
+    public function close(): void
     {
-        if ($this->Closed)
+        if ($this->closed)
             return;
 
-        foreach ($this->GetSessions(true) as $session)
-            LimGam::GetGameManager()->RemoveSession($session->GetName());
+        foreach ($this->getSessions(true) as $session)
+            LimGam::GetGameManager()->removeSession($session->getName());
 
-        if ($this->Map && $this->Map->GetLevelObject())
-            $this->Map->SetLevelObject(null, true);
+        if ($this->map && $this->map->getLevelObject())
+            $this->map->setLevelObject(null, true);
 
-        $this->Map = null;
-        $this->Game->RemoveArena($this->GetID());
+        $this->map = null;
+        $this->game->removeArena($this->getID());
     }
 
 
@@ -769,9 +769,9 @@ abstract class Arena
     /**
      * @return bool
      */
-    public function IsClosed(): bool
+    public function isClosed(): bool
     {
-        return $this->Closed;
+        return $this->closed;
     }
 
 

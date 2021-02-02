@@ -15,7 +15,7 @@ abstract class EventHeader extends EventAction
     /**
      * @return bool
      */
-    public abstract function ReturnSession(): bool;
+    public abstract function returnSession(): bool;
 
 
 

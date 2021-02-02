@@ -26,18 +26,18 @@ class SimpleLevel
 
 
     /** @var string[] */
-    protected static $Providers = [
+    protected static $providers = [
         SimpleMcRegion::REGION_FILE_EXTENSION => SimpleMcRegion::class,
         SimpleAnvil::REGION_FILE_EXTENSION    => SimpleAnvil::class
     ];
 
 
-    public static function AddLevelProvider(string $provider, string $extension): void
+    public static function addLevelProvider(string $provider, string $extension): void
     {
         if (!is_a($provider, BaseLevelProvider::class, true))
             throw new Exception($provider . " must be part of " . BaseLevelProvider::class);
 
-        self::$Providers[$extension] = $provider;
+        self::$providers[$extension] = $provider;
     }
 
 
@@ -49,17 +49,17 @@ class SimpleLevel
      * @return Level|null
      * @noinspection PhpUnused
      */
-    public static function GetLevel(Map $map, string $name, BaseLevelProvider $provider = null): ?Level
+    public static function getLevel(Map $map, string $name, BaseLevelProvider $provider = null): ?Level
     {
         try
         {
             /** @var SimpleMcRegion|BaseLevelProvider $provider */
-            $provider = $provider ?? self::GetProvider($map->GetFile());
+            $provider = $provider ?? self::GetProvider($map->getFile());
 
             if (!$provider)
-                throw new Exception("Cannot find a valid level provider for " . $map->GetFile());
+                throw new Exception("Cannot find a valid level provider for " . $map->getFile());
 
-            $level = new Level(Server::getInstance(), $name, ($provider instanceof SimpleMcRegion) ? $provider->Name($name) : $provider);
+            $level = new Level(Server::getInstance(), $name, ($provider instanceof SimpleMcRegion) ? $provider->name($name) : $provider);
 
             //Server::getInstance()->getLevels()[$level->getId()] = $level;
             //(new LevelLoadEvent($level))->call();
@@ -88,7 +88,7 @@ class SimpleLevel
      * @param string $file
      * @return BaseLevelProvider|null
      */
-    public static function GetProvider(string $file): ?BaseLevelProvider
+    public static function getProvider(string $file): ?BaseLevelProvider
     {
 
         $zip = zip_open($file);
@@ -116,10 +116,10 @@ class SimpleLevel
 
         zip_close($zip);
 
-        if (!isset(static::$Providers[$ext]))
+        if (!isset(static::$providers[$ext]))
             return null;
 
-        return new static::$Providers[$ext]($file);
+        return new static::$providers[$ext]($file);
     }
 
 

@@ -1,11 +1,10 @@
-<?php /** @noinspection PhpUnused */
+<?php
 declare(strict_types = 1);
 
 namespace LimGam;
 
 
 use LimGam\Game\GameManager;
-use Performance\Performance;
 use pocketmine\plugin\PluginBase;
 
 
@@ -19,17 +18,17 @@ class LimGam extends PluginBase
 
 
     /** @var LimGam */
-    protected static $LimInstance;
+    protected static $limInstance;
 
     /** @var GameManager */
-    protected static $GameManager;
+    protected static $gameManager;
 
 
 
     public function onLoad()
     {
-        self::$LimInstance = $this;
-        self::$GameManager = new GameManager();
+        self::$limInstance = $this;
+        self::$gameManager = new GameManager();
     }
 
 
@@ -38,9 +37,9 @@ class LimGam extends PluginBase
      * Return LimGam instance
      * @return LimGam
      */
-    public static function GetInstance(): LimGam
+    public static function getInstance(): LimGam
     {
-        return static::$LimInstance;
+        return static::$limInstance;
     }
 
 
@@ -48,9 +47,9 @@ class LimGam extends PluginBase
     /**
      * @param GameManager $gameManager
      */
-    public function SetGameManager(GameManager $gameManager): void
+    public function setGameManager(GameManager $gameManager): void
     {
-        static::$GameManager = $gameManager;
+        static::$gameManager = $gameManager;
         $this->getLogger()->debug("Default GameManager has been replaced.");
     }
 
@@ -60,9 +59,9 @@ class LimGam extends PluginBase
      * Return GameManager instance
      * @return GameManager
      */
-    public static function GetGameManager(): GameManager
+    public static function getGameManager(): GameManager
     {
-        return static::$GameManager;
+        return static::$gameManager;
     }
 
 

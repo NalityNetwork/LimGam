@@ -25,16 +25,16 @@ class InGame extends LimSession
 
 
     /** @var Arena */
-    protected $Arena;
+    protected $arena;
 
     /** @var Party|null */
-    protected $Party;
+    protected $party;
 
     /** @var int */
-    protected $Status;
+    protected $status;
 
     /** @var Team */
-    protected $Team;
+    protected $team;
 
     /** @var int Player is alive */
     public const STATUS_ALIVE      = 100;
@@ -52,7 +52,7 @@ class InGame extends LimSession
     {
         parent::__construct($player);
 
-        $this->Status = static::STATUS_BUSY;
+        $this->status = static::STATUS_BUSY;
     }
 
 
@@ -64,44 +64,44 @@ class InGame extends LimSession
      * @return $this
      * @throws Exception
      */
-    public function SendTo(?Arena $arena, int $status = InGame::STATUS_BUSY): self
+    public function sendTo(?Arena $arena, int $status = InGame::STATUS_BUSY): self
     {
         if (!$arena)
         {
-            if ($this->Arena)
+            if ($this->arena)
                 (new PlayerQuitArena($this))->call();
 
-            $this->SetTeam(null);
+            $this->setTeam(null);
 
-            $this->Arena  = $arena;
-            $this->Status = $status;
+            $this->arena  = $arena;
+            $this->status = $status;
 
             return $this;
         }
 
 
-        if ($arena->IsClosed() || $arena->IsJoinable() === false && $status === static::STATUS_ALIVE)
+        if ($arena->isClosed() || $arena->isJoinable() === false && $status === static::STATUS_ALIVE)
             throw new InvalidArgumentException("Cannot join to this arena.");
 
-        $this->Arena  = $arena;
-        $this->Status = $status;
+        $this->arena  = $arena;
+        $this->status = $status;
 
-        if (!$arena->ProcessSession($this))
+        if (!$arena->processSession($this))
         {
-            $this->SendTo(null, static::STATUS_BUSY);
+            $this->sendTo(null, static::STATUS_BUSY);
             throw new Exception("Unknown error has occurred while creating a new session.");
         }
 
-        if (!$this->GetTeam())
+        if (!$this->getTeam())
             throw new Exception();
 
 
-        if ($this->OwnsAParty())
+        if ($this->ownsAParty())
         {
-            foreach ($this->Party->GetMembers() as $member)
+            foreach ($this->party->getMembers() as $member)
             {
-                $this->Arena->GetGame()->Link($member, $this->Arena->GetID());
-                $this->Team->AddReservation($member);
+                $this->arena->getGame()->link($member, $this->arena->getID());
+                $this->team->addReservation($member);
             }
         }
 
@@ -115,9 +115,9 @@ class InGame extends LimSession
     /**
      * @return Arena
      */
-    public function GetArena(): ?Arena
+    public function getArena(): ?Arena
     {
-        return $this->Arena;
+        return $this->arena;
     }
 
 
@@ -125,12 +125,12 @@ class InGame extends LimSession
     /**
      * @param Party|null $party
      */
-    public function SetParty(?Party $party): void
+    public function setParty(?Party $party): void
     {
-        if (($this->Party instanceof Party) && $this->Party !== $party)
-            $this->Party->Disband();
+        if (($this->party instanceof Party) && $this->party !== $party)
+            $this->party->disband();
 
-        $this->Party = $party;
+        $this->party = $party;
     }
 
 
@@ -138,9 +138,9 @@ class InGame extends LimSession
     /**
      * @return Party|null
      */
-    public function GetParty(): ?Party
+    public function getParty(): ?Party
     {
-        return $this->Party;
+        return $this->party;
     }
 
 
@@ -148,10 +148,10 @@ class InGame extends LimSession
     /**
      * @return bool
      */
-    public function OwnsAParty(): bool
+    public function ownsAParty(): bool
     {
-        if ($this->Party)
-            return ($this->Party->GetOwner() === $this->GetName());
+        if ($this->party)
+            return ($this->party->getOwner() === $this->getName());
 
         return false;
     }
@@ -161,13 +161,13 @@ class InGame extends LimSession
     /**
      * @param int $status
      */
-    public function SetStatus(int $status): void
+    public function setStatus(int $status): void
     {
-        if (!$this->Team)
+        if (!$this->team)
             return;
 
-        $this->Status = $status;
-        $this->Team->UpdateStatus();
+        $this->status = $status;
+        $this->team->updateStatus();
     }
 
 
@@ -175,9 +175,9 @@ class InGame extends LimSession
     /**
      * @return int
      */
-    public function GetStatus(): int
+    public function getStatus(): int
     {
-        return $this->Status;
+        return $this->status;
     }
 
 
@@ -185,15 +185,15 @@ class InGame extends LimSession
     /**
      * @param Team|null $team
      */
-    public function SetTeam(?Team $team): void
+    public function setTeam(?Team $team): void
     {
-        if ($team && !$team->IsMember($this->GetName()))
+        if ($team && !$team->isMember($this->getName()))
             return;
 
-        if ($this->Team)
-            $this->Team->RemoveMember($this->GetName());
+        if ($this->team)
+            $this->team->removeMember($this->getName());
 
-        $this->Team = $team;
+        $this->team = $team;
     }
 
 
@@ -201,25 +201,15 @@ class InGame extends LimSession
     /**
      * @return Team|null
      */
-    public function GetTeam(): ?Team
+    public function getTeam(): ?Team
     {
-        return $this->Team;
+        return $this->team;
     }
 
 
-    public function InGame(): bool
+    public function inGame(): bool
     {
-        return ($this->Arena && $this->Team);
-    }
-
-
-
-    /**
-     * @return bool
-     */
-    public function IsAlive(): bool
-    {
-        return $this->Status === static::STATUS_ALIVE;
+        return ($this->arena && $this->team);
     }
 
 
@@ -227,9 +217,9 @@ class InGame extends LimSession
     /**
      * @return bool
      */
-    public function IsSpectating(): bool
+    public function isAlive(): bool
     {
-        return $this->Status === static::STATUS_SPECTATING;
+        return $this->status === static::STATUS_ALIVE;
     }
 
 
@@ -237,24 +227,34 @@ class InGame extends LimSession
     /**
      * @return bool
      */
-    public function IsBusy(): bool
+    public function isSpectating(): bool
     {
-        return $this->Status === static::STATUS_BUSY;
+        return $this->status === static::STATUS_SPECTATING;
     }
 
 
 
-    public function Close(): void
+    /**
+     * @return bool
+     */
+    public function isBusy(): bool
     {
-        $this->Team->RemoveMember($this->GetName());
+        return $this->status === static::STATUS_BUSY;
+    }
+
+
+
+    public function close(): void
+    {
+        $this->team->removeMember($this->getName());
     }
 
 
 
     public function __destruct()
     {
-        if ($this->Arena)
-            $this->Close();
+        if ($this->arena)
+            $this->close();
     }
 
 

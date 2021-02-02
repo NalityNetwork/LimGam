@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpUnused */
+<?php
 declare(strict_types = 1);
 
 namespace LimGam\Game\Event\Actions;
@@ -34,13 +34,13 @@ class NoDamage extends EventAction
     /**
      * @inheritDoc
      */
-    public function Process(Event $event, $result)
+    public function process(Event $event, $result)
     {
         /** @var EntityDamageEvent $event */
         if (!($event->getEntity()) instanceof Player)
             return;
 
-        if (LimGam::GetGameManager()->GetSession($event->getEntity()->getName()))
+        if (LimGam::getGameManager()->getSession($event->getEntity()->getName()))
             $event->setCancelled();
     }
 
@@ -49,7 +49,7 @@ class NoDamage extends EventAction
     /**
      * @inheritDoc
      */
-    public function GetName(): string
+    public function getName(): string
     {
         return "NoDamage";
     }
@@ -59,7 +59,7 @@ class NoDamage extends EventAction
     /**
      * @inheritDoc
      */
-    public function GetEvent(): string
+    public function getEvent(): string
     {
         return EntityDamageEvent::class;
     }

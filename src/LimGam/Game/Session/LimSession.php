@@ -16,10 +16,10 @@ abstract class LimSession
 
 
     /** @var string */
-    protected $PlayerName;
+    protected $playerName;
 
     /** @var Player */
-    protected $Player;
+    protected $player;
 
 
 
@@ -28,8 +28,8 @@ abstract class LimSession
      */
     public function __construct(Player $player)
     {
-        $this->PlayerName = $player->getName();
-        $this->Player     = $player;
+        $this->playerName = $player->getName();
+        $this->player     = $player;
     }
 
 
@@ -37,9 +37,9 @@ abstract class LimSession
     /**
      * @return string
      */
-    public function GetName(): string
+    public function getName(): string
     {
-        return $this->PlayerName;
+        return $this->playerName;
     }
 
 
@@ -47,9 +47,9 @@ abstract class LimSession
     /**
      * @return Player
      */
-    public function GetPlayer(): Player
+    public function getPlayer(): Player
     {
-        return $this->Player;
+        return $this->player;
     }
 
 

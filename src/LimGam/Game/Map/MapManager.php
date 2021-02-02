@@ -23,14 +23,14 @@ class MapManager
 
 
     /** @var Map[] */
-    protected static $Maps = [];
+    protected static $maps = [];
 
 
 
     /**
      * @param string ...$maps
      */
-    public function Load(string...$maps): void
+    public function load(string...$maps): void
     {
         foreach ($maps as $map)
         {
@@ -43,7 +43,7 @@ class MapManager
             if (!file_exists(($config["File"] ?? "")))
                 continue;
 
-            $this->AddMap(new Map($config));
+            $this->addMap(new Map($config));
         }
 
     }
@@ -53,9 +53,9 @@ class MapManager
     /**
      * @param Map $map
      */
-    public function AddMap(Map $map)
+    public function addMap(Map $map)
     {
-        static::$Maps[$map->GetGame()][$map->GetName()] = clone $map;
+        static::$maps[$map->getGame()][$map->getName()] = clone $map;
     }
 
 
@@ -65,10 +65,10 @@ class MapManager
      * @param string $name
      * @return Map|null
      */
-    public function GetMap(string $game, string $name): ?Map
+    public function getMap(string $game, string $name): ?Map
     {
-        if (isset(static::$Maps[$game], static::$Maps[$game][$name]))
-            return clone static::$Maps[$game][$name];
+        if (isset(static::$maps[$game], static::$maps[$game][$name]))
+            return clone static::$maps[$game][$name];
 
         return null;
     }
@@ -80,13 +80,13 @@ class MapManager
      * @param bool   $teamMap
      * @return array
      */
-    public function GetMaps(string $game, bool $teamMap = false): array
+    public function getMaps(string $game, bool $teamMap = false): array
     {
         $maps   = [];
-        $lookIn = (static::$Maps[$game] ?? []);
+        $lookIn = (static::$maps[$game] ?? []);
 
         foreach ($lookIn as $map)
-            if ($map->AllowTeams() === $teamMap)
+            if ($map->allowTeams() === $teamMap)
                 $maps[] = clone $map;
 
         return $maps;
@@ -100,12 +100,12 @@ class MapManager
      * @param bool   $teamMap
      * @return array
      */
-    public function GetMapsBySpawnsCount(string $game, int $spawnsCount, bool $teamMap = false): array
+    public function getMapsBySpawnsCount(string $game, int $spawnsCount, bool $teamMap = false): array
     {
         $maps = [];
 
-        foreach ($this->GetMaps($game, $teamMap) as $map)
-            if (count($map->GetSpawns()) === $spawnsCount)
+        foreach ($this->getMaps($game, $teamMap) as $map)
+            if (count($map->getSpawns()) === $spawnsCount)
                 $maps[] = $map;
 
         return $maps;
@@ -116,9 +116,9 @@ class MapManager
     /**
      * @return array
      */
-    public function GetGames(): array
+    public function getGames(): array
     {
-        return array_keys(static::$Maps);
+        return array_keys(static::$maps);
     }
 
 
@@ -128,7 +128,7 @@ class MapManager
      * @param Level  $level
      * @param string $to
      */
-    public function CompressMap(Level $level, string $to): void
+    public function compressMap(Level $level, string $to): void
     {
         if ($level->getProvider() instanceof SimpleMcRegion)
             throw new InvalidArgumentException("Cannot compress a level using SimpleMcRegion.");

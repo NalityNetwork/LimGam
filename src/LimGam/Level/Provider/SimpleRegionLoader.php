@@ -49,7 +49,7 @@ class SimpleRegionLoader extends RegionLoader
      * @param string|null $data
      * @throws Exception
      */
-    public function OpenRegion(string $data = null)
+    public function openRegion(string $data = null)
     {
         $this->filePointer = tmpfile();
 
