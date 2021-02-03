@@ -136,7 +136,7 @@ class MapManager
         $zip  = new ZipArchive();
         $path = realpath(DATA . "worlds" . DIRECTORY_SEPARATOR . $level->getFolderName() . DIRECTORY_SEPARATOR);
 
-        if ($zip->open(sprintf("%s%s.zip", $to, $level->getFolderName()), ZipArchive::CREATE))
+        if ($zip->open($to, ZipArchive::CREATE))
         {
             $files = new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS);
             foreach (new \RecursiveIteratorIterator($files, \RecursiveIteratorIterator::CHILD_FIRST) as $file)
