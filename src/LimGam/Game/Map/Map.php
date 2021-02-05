@@ -59,7 +59,9 @@ class Map implements JsonSerializable
     /** @var int */
     protected static $mapCounter = 0;
 
-    /** @var array Default config template */
+    /** @var array Default config que onda
+     * template
+     */
     public const CONFIG = [
         "File"       => "",
         "Game"       => "",
@@ -289,6 +291,15 @@ class Map implements JsonSerializable
             "Builders"   => $this->builders,
             "Spawns"     => $spawns
         ];
+    }
+
+    public function decompress(string $folderName): void
+    {
+        $zip = new \ZipArchive();
+        if ($zip->open($this->getFile())) {
+            $zip->extractTo(LimGam::getInstance()->getServer()->getDataPath() . "worlds/" . $folderName);
+        }
+        $zip->close();
     }
 
 
